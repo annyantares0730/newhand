@@ -1,0 +1,607 @@
+
+<h2 class="sr-only">Dance studio points management system — members, check-in, and purchase recording</h2>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+
+.app { min-height: 600px; display: flex; flex-direction: column; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.studio-name { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.tabs { display: flex; gap: 4px; padding: 12px 20px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.tab { font-size: 13px; padding: 8px 14px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; margin-bottom: -0.5px; border-radius: 0; background: none; border-left: none; border-right: none; border-top: none; }
+.tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); font-weight: 500; }
+.tab:hover:not(.active) { color: var(--color-text-primary); background: var(--color-background-secondary); }
+
+.content { padding: 20px; flex: 1; }
+
+.search-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+.search-bar input { flex: 1; }
+.search-bar select { width: 140px; }
+
+.member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.member-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; cursor: pointer; transition: border-color 0.15s; }
+.member-card:hover { border-color: var(--color-border-secondary); }
+.member-card.warning { border-left: 3px solid #ef9f27; }
+.member-card.expired { border-left: 3px solid #e24b4a; }
+.member-card.ok { border-left: 3px solid #639922; }
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; background: var(--color-background-info); color: var(--color-text-info); flex-shrink: 0; }
+.member-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.member-id { font-size: 11px; color: var(--color-text-tertiary); }
+.points-row { display: flex; justify-content: space-between; align-items: center; }
+.points-big { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.points-label { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+.expiry { font-size: 11px; color: var(--color-text-secondary); }
+.expiry.soon { color: #ba7517; }
+.expiry.expired { color: #a32d2d; }
+
+.badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+.badge-ok { background: #eaf3de; color: #3b6d11; }
+.badge-warn { background: #faeeda; color: #854f0b; }
+.badge-danger { background: #fcebeb; color: #a32d2d; }
+
+.form-section { max-width: 520px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 5px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; gap: 8px; margin-top: 20px; }
+
+.alert { padding: 12px 16px; border-radius: var(--border-radius-md); font-size: 13px; margin-bottom: 16px; display: none; }
+.alert.success { background: #eaf3de; color: #3b6d11; }
+.alert.error { background: #fcebeb; color: #a32d2d; }
+
+.detail-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 20px; overflow-y: auto; display: none; z-index: 10; }
+.back-btn { font-size: 13px; color: var(--color-text-secondary); cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; background: none; border: none; }
+.back-btn:hover { color: var(--color-text-primary); }
+
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+.stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.stat-value { font-size: 20px; font-weight: 500; }
+
+.history-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.history-table th { text-align: left; color: var(--color-text-secondary); font-weight: 400; padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.history-table td { padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; }
+.history-table tr:last-child td { border-bottom: none; }
+.deduct { color: #a32d2d; }
+.add { color: #3b6d11; }
+
+.section-title { font-size: 13px; font-weight: 500; margin-bottom: 10px; margin-top: 20px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.wrap { position: relative; min-height: 500px; }
+.empty { text-align: center; padding: 48px 20px; color: var(--color-text-secondary); font-size: 14px; }
+
+.checkin-list { display: flex; flex-direction: column; gap: 8px; }
+.checkin-item { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+.checkin-name { font-size: 14px; font-weight: 500; }
+.checkin-points { font-size: 12px; color: var(--color-text-secondary); }
+
+.tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--color-background-secondary); color: var(--color-text-secondary); }
+</style>
+
+<div class="app">
+<div class="topbar">
+  <div style="width:28px;height:28px;background:var(--color-background-info);border-radius:6px;display:flex;align-items:center;justify-content:center;">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="var(--color-text-info)" stroke-width="1.5"/><path d="M8 5v4l2.5 1.5" stroke="var(--color-text-info)" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </div>
+  <span class="studio-name">Jazzy Dance — 點數系統</span>
+  <span id="today-date" style="font-size:12px;color:var(--color-text-secondary);margin-left:auto;"></span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('members')">學員總覽</button>
+  <button class="tab" onclick="showTab('checkin')">出席登記</button>
+  <button class="tab" onclick="showTab('purchase')">購課登記</button>
+  <button class="tab" onclick="showTab('newmember')">新增學員</button>
+</div>
+
+<div class="content">
+  <div id="tab-members" class="wrap">
+    <div class="search-bar">
+      <input type="text" placeholder="搜尋姓名或學員編號..." id="member-search" oninput="renderMembers()" />
+      <select id="filter-status" onchange="renderMembers()">
+        <option value="all">所有學員</option>
+        <option value="active">有效點數</option>
+        <option value="warning">即將到期 (7天內)</option>
+        <option value="expired">已過期</option>
+      </select>
+    </div>
+    <div id="alert-msg" class="alert"></div>
+    <div id="member-count" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;"></div>
+    <div class="member-grid" id="member-grid"></div>
+    
+    <div class="detail-overlay" id="detail-overlay">
+      <button class="back-btn" onclick="closeDetail()">← 返回列表</button>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+
+  <div id="tab-checkin" style="display:none;" class="wrap">
+    <div class="form-section">
+      <div class="alert" id="checkin-alert"></div>
+      <div class="form-group">
+        <label>學員搜尋</label>
+        <input type="text" id="checkin-search" placeholder="輸入姓名或編號..." oninput="searchMemberForForm('checkin')" />
+        <div id="checkin-suggestions" style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-top:4px;overflow:hidden;display:none;"></div>
+      </div>
+      <div id="checkin-member-info" style="display:none;">
+        <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="stat-card"><div class="stat-label">現有點數</div><div class="stat-value" id="ci-points">-</div></div>
+          <div class="stat-card"><div class="stat-label">效期</div><div class="stat-value" style="font-size:14px;padding-top:4px;" id="ci-expiry">-</div></div>
+          <div class="stat-card"><div class="stat-label">狀態</div><div class="stat-value" style="font-size:14px;padding-top:4px;" id="ci-status">-</div></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>出席狀況</label>
+          <select id="ci-attendance">
+            <option value="有出席">有出席</option>
+            <option value="課前24小時以內請假">24hr內請假</option>
+            <option value="未出席">未出席</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>扣除點數</label>
+          <input type="number" id="ci-deduct" min="1" max="10" value="3" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>課程名稱</label>
+        <input type="text" id="ci-course" placeholder="例：【週五】19:00-20:30 抒情爵士(L4)｜學魚" />
+      </div>
+      <div class="form-group">
+        <label>登打日期</label>
+        <input type="date" id="ci-date" />
+      </div>
+      <div class="form-group">
+        <label>現場收錢人員 / 備註</label>
+        <input type="text" id="ci-staff" placeholder="例：學魚 / 匯款末五碼" />
+      </div>
+      <div class="form-actions">
+        <button onclick="submitCheckin()">確認扣點 →</button>
+        <button onclick="resetCheckin()" style="color:var(--color-text-secondary);">重設</button>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;">
+      <div class="section-title">今日出席記錄</div>
+      <div id="today-checkins" class="checkin-list"></div>
+    </div>
+  </div>
+
+  <div id="tab-purchase" style="display:none;" class="wrap">
+    <div class="form-section">
+      <div class="alert" id="purchase-alert"></div>
+      <div class="form-group">
+        <label>學員搜尋</label>
+        <input type="text" id="purchase-search" placeholder="輸入姓名或編號..." oninput="searchMemberForForm('purchase')" />
+        <div id="purchase-suggestions" style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-top:4px;overflow:hidden;display:none;"></div>
+      </div>
+      <div id="purchase-member-info" style="display:none;">
+        <div class="stat-row" style="grid-template-columns:1fr 1fr;">
+          <div class="stat-card"><div class="stat-label">目前點數</div><div class="stat-value" id="pu-points">-</div></div>
+          <div class="stat-card"><div class="stat-label">目前效期</div><div class="stat-value" style="font-size:14px;padding-top:4px;" id="pu-expiry">-</div></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>購買點數</label>
+          <select id="pu-package" onchange="updatePackage()">
+            <option value="10|1900|2">10點 — $1,900（2個月）</option>
+            <option value="20|3600|3">20點 — $3,600（3個月）</option>
+            <option value="30|4800|3">30點 — $4,800（3個月）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>贈點（雙倍送/抽獎）</label>
+          <input type="number" id="pu-bonus" min="0" value="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>繳費金額</label>
+          <input type="text" id="pu-amount" />
+        </div>
+        <div class="form-group">
+          <label>繳費方式</label>
+          <select id="pu-payment">
+            <option>匯款</option>
+            <option>現場</option>
+            <option>iPassMoney</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>開通日期</label>
+          <input type="date" id="pu-date" />
+        </div>
+        <div class="form-group">
+          <label>效期（自動計算）</label>
+          <input type="text" id="pu-expiry-calc" readonly style="color:var(--color-text-secondary);" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>收款人員 / 匯款末五碼</label>
+        <input type="text" id="pu-staff" />
+      </div>
+      <div class="form-group">
+        <label>備註</label>
+        <input type="text" id="pu-note" placeholder="例：寄放櫃檯、學員帶走..." />
+      </div>
+      <div class="form-actions">
+        <button onclick="submitPurchase()">確認購課 →</button>
+        <button onclick="resetPurchase()" style="color:var(--color-text-secondary);">重設</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-newmember" style="display:none;" class="wrap">
+    <div class="form-section">
+      <div class="alert" id="newmember-alert"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>姓名 *</label>
+          <input type="text" id="nm-name" placeholder="中文姓名" />
+        </div>
+        <div class="form-group">
+          <label>別名（英文名）</label>
+          <input type="text" id="nm-alias" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>手機</label>
+          <input type="text" id="nm-phone" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="nm-email" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>LINE ID</label>
+          <input type="text" id="nm-line" />
+        </div>
+        <div class="form-group">
+          <label>Instagram</label>
+          <input type="text" id="nm-ig" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>入口課程</label>
+        <input type="text" id="nm-course" placeholder="例：週五抒情爵士" />
+      </div>
+      <div class="form-group">
+        <label>備註</label>
+        <textarea id="nm-note" rows="2" style="width:100%;resize:vertical;"></textarea>
+      </div>
+      <div class="form-actions">
+        <button onclick="submitNewMember()">新增學員 →</button>
+        <button onclick="resetNewMember()" style="color:var(--color-text-secondary);">重設</button>
+      </div>
+      <div style="margin-top:20px;font-size:12px;color:var(--color-text-secondary);">
+        學員編號將自動指派。新增後請記得到「購課登記」為學員開通課卡。
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const TODAY = new Date();
+const todayStr = TODAY.toISOString().split('T')[0];
+document.getElementById('today-date').textContent = TODAY.toLocaleDateString('zh-TW', {year:'numeric',month:'long',day:'numeric'});
+
+const MEMBERS_RAW = [
+  {id:'JZ0012',name:'潘玟君',alias:'',phone:'0936913561',email:'panwenchun@gmail.com',points:12,expiry:'2026/06/09'},
+  {id:'JZ0014',name:'芋頭',alias:'方韻茼',phone:'972313396',email:'f.btl@hotmail.com',points:22,expiry:'2026/07/07'},
+  {id:'JZ0015',name:'楊晴皓',alias:'',phone:'',email:'',points:26,expiry:'2026/06/16'},
+  {id:'JZ0016',name:'吳政彥',alias:'小彥',phone:'0912194293',email:'dlamyan@gmail.com',points:17,expiry:'2026/07/14'},
+  {id:'JZ0017',name:'朱湘芬',alias:'',phone:'',email:'',points:41,expiry:'2026/07/14'},
+  {id:'JZ0019',name:'賴冠穎',alias:'',phone:'',email:'jessicalailai@hotmail.com',points:1,expiry:'2026/06/09'},
+  {id:'JZ0021',name:'Sophie',alias:'江峯秀',phone:'0930002553',email:'hello.sophiejiang@gmail.com',points:24,expiry:'2026/07/18'},
+  {id:'JZ0022',name:'卓宛萱',alias:'',phone:'972774705',email:'cwhsuannnnn@gmail.com',points:21,expiry:'2026/06/14'},
+  {id:'JZ0023',name:'Eva',alias:'游季璇',phone:'',email:'',points:1,expiry:'2026/04/17'},
+  {id:'JZ0024',name:'謝佩憶',alias:'',phone:'939796567',email:'pearlyshieh@gmail.com',points:8,expiry:'2026/06/18'},
+  {id:'JZ0025',name:'Mandy',alias:'路雅如',phone:'',email:'roxylu0805@gmail.com',points:11,expiry:'2026/07/04'},
+  {id:'JZ0026',name:'林芃君',alias:'',phone:'',email:'',points:31,expiry:'2026/05/13'},
+  {id:'JZ0028',name:'runa',alias:'王俞茹',phone:'',email:'tomatolover86612@gmail.com',points:26,expiry:'2026/06/05'},
+  {id:'JZ0029',name:'Tim',alias:'蔡言悌',phone:'0931226463',email:'tim85613@gmail.com',points:28,expiry:'2026/06/05'},
+  {id:'JZ0031',name:'楊子柔',alias:'',phone:'983721815',email:'yangtzujou@gmail.com',points:4,expiry:'2026/03/23'},
+  {id:'JZ0032',name:'陳晏瑜',alias:'',phone:'',email:'',points:12,expiry:'2026/03/20'},
+  {id:'JZ0034',name:'陳以暄',alias:'',phone:'0909798925',email:'erin19231204@gmail.com',points:7,expiry:'2026/06/24'},
+  {id:'JZ0041',name:'郭信華',alias:'',phone:'920165990',email:'sophy2264kuo@gmail.com',points:24,expiry:'2026/06/22'},
+  {id:'JZ0042',name:'陳毅銘',alias:'',phone:'0921955323',email:'nomar9564@gmai.com',points:25,expiry:'2026/07/15'},
+  {id:'JZ0043',name:'曹貴玲',alias:'',phone:'0922396982',email:'carol@pepwood.com.tw',points:-3,expiry:'2026/05/09'},
+  {id:'JZ0044',name:'廖莉萍',alias:'',phone:'',email:'',points:5,expiry:'2026/05/08'},
+  {id:'JZ0045',name:'Lyndon',alias:'尉霖登',phone:'',email:'',points:28,expiry:'2026/07/20'},
+  {id:'JZ0046',name:'陳淑美',alias:'',phone:'0919209769',email:'jenny@greatwall-infotech.com.tw',points:15,expiry:'2026/04/14'},
+  {id:'JZ0047',name:'楊欣恩',alias:'',phone:'',email:'',points:5,expiry:'2026/05/02'},
+  {id:'JZ0048',name:'陳謙豪',alias:'',phone:'',email:'',points:0,expiry:'2026/04/08'},
+  {id:'JZ0051',name:'楊惟婷',alias:'',phone:'',email:'ericaaa191293@gmail.com',points:0,expiry:'2026/05/26'},
+  {id:'JZ0053',name:'吳姿穎',alias:'',phone:'',email:'ninawu.up@gmail.com',points:14,expiry:'2026/04/19'},
+  {id:'JZ0054',name:'李淑儀',alias:'',phone:'',email:'alison0068@gmail.com',points:16,expiry:'2026/06/23'},
+  {id:'JZ0055',name:'陳奕璇',alias:'',phone:'',email:'ashleychensd@gmail.com',points:2,expiry:'2026/03/14'},
+  {id:'JZ0056',name:'王暄竹',alias:'',phone:'0988273343',email:'sheryl31@gmail.com',points:12,expiry:'2026/06/11'},
+  {id:'JZ0057',name:'賀雲',alias:'',phone:'0903559616',email:'smile20512@gmail.com',points:34,expiry:'2026/04/23'},
+  {id:'JZ0060',name:'Naomi',alias:'鄒文君',phone:'',email:'',points:9,expiry:'2026/05/25'},
+  {id:'JZ0061',name:'黃騰輝',alias:'',phone:'',email:'',points:18,expiry:'2026/06/14'},
+  {id:'JZ0063',name:'申任廷',alias:'',phone:'930700381',email:'',points:0,expiry:'2026/04/17'},
+  {id:'JZ0064',name:'Hank',alias:'沈毓涵',phone:'952676031',email:'',points:24,expiry:'2026/07/12'},
+  {id:'JZ0065',name:'林軒弘',alias:'',phone:'',email:'',points:8,expiry:'2026/03/20'},
+  {id:'JZ0066',name:'汪穎瑩',alias:'',phone:'',email:'',points:4,expiry:'2026/03/23'},
+  {id:'JZ0067',name:'洪廣芝',alias:'',phone:'0978850731',email:'minniehkc40312@gmail.com',points:9,expiry:'2026/05/23'},
+  {id:'JZ0069',name:'王瑞芬',alias:'',phone:'0933123198',email:'',points:6,expiry:'2026/06/24'},
+  {id:'JZ0070',name:'李敏慈',alias:'',phone:'',email:'michellelee8215@gmail.com',points:1,expiry:'2026/04/18'},
+  {id:'JZ0071',name:'孫宇寧',alias:'',phone:'0968505296',email:'sunyuning1211@gmail.com',points:9,expiry:'2026/06/15'},
+  {id:'JZ0073',name:'黃意函',alias:'',phone:'',email:'',points:23,expiry:'2026/07/23'},
+  {id:'JZ0074',name:'蔣宏宇',alias:'',phone:'917123512',email:'',points:14,expiry:'2026/06/08'},
+  {id:'JZ0075',name:'賴彥君',alias:'',phone:'',email:'',points:4,expiry:'2026/05/07'},
+  {id:'JZ0076',name:'胡如樺',alias:'',phone:'',email:'',points:9,expiry:'2026/06/23'},
+  {id:'JZ0077',name:'蕭舜文',alias:'',phone:'',email:'',points:7,expiry:'2026/05/16'},
+  {id:'JZ0078',name:'李采霓',alias:'',phone:'934263493',email:'',points:9,expiry:'2026/06/23'},
+  {id:'JZ0079',name:'馬岍婷',alias:'',phone:'0912812770',email:'sseelleess@gmail.com',points:14,expiry:'2026/06/05'},
+  {id:'JZ0080',name:'杜孟儒',alias:'',phone:'',email:'',points:28,expiry:'2026/06/05'},
+  {id:'JZ0081',name:'何翊禎',alias:'',phone:'916134133',email:'',points:7,expiry:'2026/05/21'},
+  {id:'JZ0082',name:'邱子芸',alias:'',phone:'968674319',email:'',points:8,expiry:'2026/06/13'},
+  {id:'JZ0083',name:'陳彥樺',alias:'Allyson',phone:'972011676',email:'',points:21,expiry:'2026/07/23'},
+  {id:'JZ0084',name:'Ashley',alias:'高維璘',phone:'910601325',email:'',points:24,expiry:'2026/07/04'},
+  {id:'JZ0086',name:'鄧丞恩',alias:'',phone:'938799912',email:'andyteng0309@hotmail.com.tw',points:24,expiry:'2026/07/07'},
+];
+
+let members = JSON.parse(JSON.stringify(MEMBERS_RAW));
+let checkinLog = [];
+let selectedMemberId = null;
+let selectedTab = 'members';
+
+function getStatus(m) {
+  if (!m.expiry) return 'nocard';
+  const exp = new Date(m.expiry.replace(/\//g, '-'));
+  const diff = (exp - TODAY) / 86400000;
+  if (m.points <= 0) return 'nopoints';
+  if (diff < 0) return 'expired';
+  if (diff <= 7) return 'warning';
+  return 'ok';
+}
+
+function statusBadge(st) {
+  if (st === 'ok') return '<span class="badge badge-ok">有效</span>';
+  if (st === 'warning') return '<span class="badge badge-warn">即將到期</span>';
+  if (st === 'expired') return '<span class="badge badge-danger">已過期</span>';
+  if (st === 'nopoints') return '<span class="badge badge-danger">點數用完</span>';
+  return '<span class="badge">無課卡</span>';
+}
+
+function renderMembers() {
+  const q = document.getElementById('member-search').value.toLowerCase();
+  const filter = document.getElementById('filter-status').value;
+  let list = members.filter(m => {
+    const match = !q || m.name.includes(q) || m.id.toLowerCase().includes(q) || (m.alias && m.alias.includes(q));
+    const st = getStatus(m);
+    const fmatch = filter === 'all' || filter === st || (filter === 'active' && st === 'ok');
+    return match && fmatch;
+  });
+  document.getElementById('member-count').textContent = `共 ${list.length} 位學員`;
+  const grid = document.getElementById('member-grid');
+  if (!list.length) { grid.innerHTML = '<div class="empty">找不到符合的學員</div>'; return; }
+  grid.innerHTML = list.map(m => {
+    const st = getStatus(m);
+    const cardClass = st === 'warning' ? 'warning' : st === 'expired' || st === 'nopoints' ? 'expired' : 'ok';
+    const expClass = st === 'warning' ? 'soon' : (st === 'expired' ? 'expired' : '');
+    const initials = (m.name || '?').slice(0,2);
+    return `<div class="member-card ${cardClass}" onclick="showDetail('${m.id}')">
+      <div class="card-header">
+        <div class="avatar">${initials}</div>
+        <div><div class="member-name">${m.name}${m.alias ? ` <span style="font-weight:400;color:var(--color-text-secondary);font-size:12px;">${m.alias}</span>` : ''}</div>
+        <div class="member-id">${m.id}${m.phone ? ' · ' + m.phone : ''}</div></div>
+      </div>
+      <div class="points-row">
+        <div><div class="points-big">${m.points}</div><div class="points-label">現有點數</div></div>
+        <div style="text-align:right">
+          ${statusBadge(st)}
+          <div class="expiry ${expClass}" style="margin-top:4px;">${m.expiry ? '效期 ' + m.expiry : '—'}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showDetail(id) {
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  const st = getStatus(m);
+  const log = checkinLog.filter(x => x.memberId === id);
+  document.getElementById('detail-overlay').style.display = 'block';
+  document.getElementById('detail-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div class="avatar" style="width:48px;height:48px;font-size:16px;">${m.name.slice(0,2)}</div>
+      <div><div style="font-size:18px;font-weight:500;">${m.name}${m.alias ? ` (${m.alias})` : ''}</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);">${m.id}${m.phone ? ' · ' + m.phone : ''}${m.email ? ' · ' + m.email : ''}</div></div>
+      ${statusBadge(st)}
+    </div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-label">現有點數</div><div class="stat-value">${m.points}</div></div>
+      <div class="stat-card"><div class="stat-label">點數效期</div><div class="stat-value" style="font-size:14px;padding-top:4px;">${m.expiry || '—'}</div></div>
+      <div class="stat-card"><div class="stat-label">本session紀錄</div><div class="stat-value">${log.length} 筆</div></div>
+    </div>
+    ${log.length ? `<div class="section-title">本session出席記錄</div>
+    <table class="history-table"><thead><tr><th>日期</th><th>出席</th><th>點數</th><th>課程</th></tr></thead>
+    <tbody>${log.map(r => `<tr><td>${r.date}</td><td>${r.attendance}</td><td class="deduct">-${r.points}</td><td style="max-width:200px;word-break:break-word;">${r.course || '—'}</td></tr>`).join('')}</tbody></table>` : ''}
+  `;
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').style.display = 'none';
+}
+
+function showTab(tab) {
+  ['members','checkin','purchase','newmember'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    el.classList.toggle('active', ['members','checkin','purchase','newmember'][i] === tab);
+  });
+  selectedTab = tab;
+  if (tab === 'checkin') {
+    document.getElementById('ci-date').value = todayStr;
+    renderTodayCheckins();
+  }
+  if (tab === 'purchase') {
+    document.getElementById('pu-date').value = todayStr;
+    updatePackage();
+  }
+}
+
+function searchMemberForForm(type) {
+  const q = document.getElementById(type+'-search').value.toLowerCase();
+  const sugDiv = document.getElementById(type+'-suggestions');
+  if (!q) { sugDiv.style.display = 'none'; return; }
+  const matches = members.filter(m => m.name.includes(q) || m.id.toLowerCase().includes(q) || (m.alias && m.alias.includes(q))).slice(0,5);
+  if (!matches.length) { sugDiv.style.display = 'none'; return; }
+  sugDiv.style.display = 'block';
+  sugDiv.innerHTML = matches.map(m => `<div onclick="selectMember('${m.id}','${type}')" style="padding:10px 12px;cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
+    <div><span style="font-weight:500">${m.name}</span>${m.alias ? ' <span style="color:var(--color-text-secondary);font-size:12px;">'+m.alias+'</span>' : ''} <span style="font-size:12px;color:var(--color-text-tertiary);">${m.id}</span></div>
+    <div style="font-size:13px;font-weight:500;">${m.points}點 <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary);">${m.expiry || ''}</span></div>
+  </div>`).join('');
+}
+
+function selectMember(id, type) {
+  const m = members.find(x => x.id === id);
+  selectedMemberId = id;
+  document.getElementById(type+'-search').value = `${m.name} (${m.id})`;
+  document.getElementById(type+'-suggestions').style.display = 'none';
+  
+  if (type === 'checkin') {
+    const st = getStatus(m);
+    document.getElementById('checkin-member-info').style.display = 'block';
+    document.getElementById('ci-points').textContent = m.points;
+    document.getElementById('ci-expiry').textContent = m.expiry || '—';
+    document.getElementById('ci-status').innerHTML = statusBadge(st);
+  }
+  if (type === 'purchase') {
+    document.getElementById('purchase-member-info').style.display = 'block';
+    document.getElementById('pu-points').textContent = m.points;
+    document.getElementById('pu-expiry').textContent = m.expiry || '—';
+  }
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'alert ' + type;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3500);
+}
+
+function submitCheckin() {
+  if (!selectedMemberId) { showAlert('checkin-alert','請先選擇學員','error'); return; }
+  const m = members.find(x => x.id === selectedMemberId);
+  const pts = parseInt(document.getElementById('ci-deduct').value) || 0;
+  const attendance = document.getElementById('ci-attendance').value;
+  const course = document.getElementById('ci-course').value;
+  const date = document.getElementById('ci-date').value || todayStr;
+  
+  m.points -= pts;
+  document.getElementById('ci-points').textContent = m.points;
+  
+  const log = { memberId: m.id, memberName: m.name, points: pts, attendance, course, date, staff: document.getElementById('ci-staff').value };
+  checkinLog.push(log);
+  
+  showAlert('checkin-alert', `已為 ${m.name} 扣除 ${pts} 點，剩餘 ${m.points} 點`, 'success');
+  renderTodayCheckins();
+  renderMembers();
+  document.getElementById('ci-course').value = '';
+  document.getElementById('ci-staff').value = '';
+}
+
+function resetCheckin() {
+  selectedMemberId = null;
+  document.getElementById('checkin-search').value = '';
+  document.getElementById('checkin-member-info').style.display = 'none';
+}
+
+function renderTodayCheckins() {
+  const today = document.getElementById('ci-date').value || todayStr;
+  const list = checkinLog.filter(r => r.date === today);
+  const el = document.getElementById('today-checkins');
+  if (!list.length) { el.innerHTML = '<div style="font-size:13px;color:var(--color-text-secondary);">尚無記錄</div>'; return; }
+  el.innerHTML = list.map(r => `<div class="checkin-item">
+    <div><div class="checkin-name">${r.memberName} <span class="tag">${r.memberId}</span></div>
+    <div class="checkin-points">${r.attendance} · ${r.course || '未填課程'}</div></div>
+    <div class="deduct" style="font-weight:500;">-${r.points}點</div>
+  </div>`).join('');
+}
+
+function updatePackage() {
+  const val = document.getElementById('pu-package').value.split('|');
+  document.getElementById('pu-amount').value = val[1];
+  const startDate = document.getElementById('pu-date').value || todayStr;
+  const exp = new Date(startDate);
+  exp.setMonth(exp.getMonth() + parseInt(val[2]));
+  document.getElementById('pu-expiry-calc').value = exp.toLocaleDateString('zh-TW').replace(/\//g, '/');
+}
+
+document.getElementById('pu-date').addEventListener('change', updatePackage);
+
+function submitPurchase() {
+  if (!selectedMemberId) { showAlert('purchase-alert','請先選擇學員','error'); return; }
+  const m = members.find(x => x.id === selectedMemberId);
+  const val = document.getElementById('pu-package').value.split('|');
+  const bonus = parseInt(document.getElementById('pu-bonus').value) || 0;
+  const newPts = parseInt(val[0]) + bonus;
+  const expStr = document.getElementById('pu-expiry-calc').value;
+  
+  m.points += newPts;
+  m.expiry = expStr;
+  
+  document.getElementById('pu-points').textContent = m.points;
+  document.getElementById('pu-expiry').textContent = m.expiry;
+  
+  showAlert('purchase-alert', `已為 ${m.name} 新增 ${newPts} 點（含贈點${bonus}），效期至 ${expStr}`, 'success');
+  renderMembers();
+}
+
+function resetPurchase() {
+  selectedMemberId = null;
+  document.getElementById('purchase-search').value = '';
+  document.getElementById('purchase-member-info').style.display = 'none';
+}
+
+function submitNewMember() {
+  const name = document.getElementById('nm-name').value.trim();
+  if (!name) { showAlert('newmember-alert','姓名為必填','error'); return; }
+  
+  const existingIds = members.map(m => parseInt(m.id.replace('JZ',''))).filter(Boolean);
+  const nextNum = Math.max(...existingIds) + 1;
+  const newId = 'JZ' + String(nextNum).padStart(4,'0');
+  
+  const newM = {
+    id: newId,
+    name,
+    alias: document.getElementById('nm-alias').value,
+    phone: document.getElementById('nm-phone').value,
+    email: document.getElementById('nm-email').value,
+    points: 0,
+    expiry: ''
+  };
+  members.unshift(newM);
+  
+  showAlert('newmember-alert', `已新增學員 ${name}，學員編號：${newId}`, 'success');
+  resetNewMember();
+  renderMembers();
+}
+
+function resetNewMember() {
+  ['nm-name','nm-alias','nm-phone','nm-email','nm-line','nm-ig','nm-course','nm-note'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+renderMembers();
+updatePackage();
+document.getElementById('ci-date').value = todayStr;
+</script>
