@@ -1,607 +1,3045 @@
-
-<h2 class="sr-only">Dance studio points management system — members, check-in, and purchase recording</h2>
-
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RICH 新人學習手冊 · 輕易豐盛學苑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: var(--font-sans); }
+  :root {
+    --gold-light: #E8D5A3;
+    --gold: #C9A961;
+    --gold-dark: #8B7341;
+    --gold-deep: #6B5530;
+    --cream: #FAF5E8;
+    --cream-warm: #F5EBD4;
+    --cream-edge: #EDE1C8;
+    --brown: #3D2914;
+    --ink: #2B1A0F;
+    --red: #B8312C;
+    --talent: #4FAE6F;
+    --wealth: #E67E2B;
+    --network: #B8396F;
+    --insight: #6B5B95;
+    --page-w: 210mm;
+    --page-h: 297mm;
+  }
 
-.app { min-height: 600px; display: flex; flex-direction: column; }
-.topbar { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-.studio-name { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
-.tabs { display: flex; gap: 4px; padding: 12px 20px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
-.tab { font-size: 13px; padding: 8px 14px; cursor: pointer; color: var(--color-text-secondary); border-bottom: 2px solid transparent; margin-bottom: -0.5px; border-radius: 0; background: none; border-left: none; border-right: none; border-top: none; }
-.tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); font-weight: 500; }
-.tab:hover:not(.active) { color: var(--color-text-primary); background: var(--color-background-secondary); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-.content { padding: 20px; flex: 1; }
+  body {
+    background: #2a2520;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: var(--ink);
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
 
-.search-bar { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
-.search-bar input { flex: 1; }
-.search-bar select { width: 140px; }
+  .deck-info {
+    max-width: 210mm;
+    margin: 0 auto 30px;
+    text-align: center;
+    color: var(--gold-light);
+    font-size: 13px;
+    letter-spacing: 4px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+  }
 
-.member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-.member-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; cursor: pointer; transition: border-color 0.15s; }
-.member-card:hover { border-color: var(--color-border-secondary); }
-.member-card.warning { border-left: 3px solid #ef9f27; }
-.member-card.expired { border-left: 3px solid #e24b4a; }
-.member-card.ok { border-left: 3px solid #639922; }
-.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; background: var(--color-background-info); color: var(--color-text-info); flex-shrink: 0; }
-.member-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
-.member-id { font-size: 11px; color: var(--color-text-tertiary); }
-.points-row { display: flex; justify-content: space-between; align-items: center; }
-.points-big { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
-.points-label { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
-.expiry { font-size: 11px; color: var(--color-text-secondary); }
-.expiry.soon { color: #ba7517; }
-.expiry.expired { color: #a32d2d; }
+  .page {
+    width: var(--page-w);
+    min-height: var(--page-h);
+    background: var(--cream);
+    margin: 0 auto 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,169,97,0.2);
+    page-break-after: always;
+  }
 
-.badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
-.badge-ok { background: #eaf3de; color: #3b6d11; }
-.badge-warn { background: #faeeda; color: #854f0b; }
-.badge-danger { background: #fcebeb; color: #a32d2d; }
+  /* 通用金色裝飾 */
+  .gold-bar-top, .gold-bar-bottom {
+    position: absolute;
+    left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg,
+      transparent 0%, var(--gold-light) 8%, var(--gold) 30%,
+      var(--gold-dark) 50%, var(--gold) 70%, var(--gold-light) 92%, transparent 100%);
+  }
+  .gold-bar-top { top: 0; }
+  .gold-bar-bottom { bottom: 0; }
 
-.form-section { max-width: 520px; }
-.form-group { margin-bottom: 14px; }
-.form-group label { display: block; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 5px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .page-num {
+    position: absolute;
+    bottom: 14mm; right: 15mm;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--gold-dark);
+    letter-spacing: 4px;
+    opacity: 0.6;
+  }
 
-.alert { padding: 12px 16px; border-radius: var(--border-radius-md); font-size: 13px; margin-bottom: 16px; display: none; }
-.alert.success { background: #eaf3de; color: #3b6d11; }
-.alert.error { background: #fcebeb; color: #a32d2d; }
+  .page-footer {
+    position: absolute;
+    bottom: 14mm; left: 15mm;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 9px;
+    color: var(--gold-dark);
+    letter-spacing: 3px;
+    opacity: 0.5;
+  }
 
-.detail-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 20px; overflow-y: auto; display: none; z-index: 10; }
-.back-btn { font-size: 13px; color: var(--color-text-secondary); cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; background: none; border: none; }
-.back-btn:hover { color: var(--color-text-primary); }
+  .page-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px;
+    color: var(--gold-dark);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 8mm;
+  }
 
-.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-.stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
-.stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
-.stat-value { font-size: 20px; font-weight: 500; }
+  .page-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 4px;
+    margin-bottom: 4mm;
+  }
 
-.history-table { width: 100%; font-size: 12px; border-collapse: collapse; }
-.history-table th { text-align: left; color: var(--color-text-secondary); font-weight: 400; padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
-.history-table td { padding: 7px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: top; }
-.history-table tr:last-child td { border-bottom: none; }
-.deduct { color: #a32d2d; }
-.add { color: #3b6d11; }
+  .page-title-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--gold-dark);
+    letter-spacing: 5px;
+    margin-bottom: 10mm;
+  }
 
-.section-title { font-size: 13px; font-weight: 500; margin-bottom: 10px; margin-top: 20px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .gold-divider {
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold-light), var(--gold), var(--gold-dark));
+    margin-bottom: 10mm;
+  }
 
-.wrap { position: relative; min-height: 500px; }
-.empty { text-align: center; padding: 48px 20px; color: var(--color-text-secondary); font-size: 14px; }
+  .gold-divider.center {
+    margin-left: auto; margin-right: auto;
+  }
 
-.checkin-list { display: flex; flex-direction: column; gap: 8px; }
-.checkin-item { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-.checkin-name { font-size: 14px; font-weight: 500; }
-.checkin-points { font-size: 12px; color: var(--color-text-secondary); }
+  /* ============================================
+     封面
+     ============================================ */
+  .page-cover {
+    background: radial-gradient(ellipse at center, #FFF8E7 0%, var(--cream-warm) 55%, #D9C088 100%);
+    padding: 0;
+  }
 
-.tag { display: inline-block; font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--color-background-secondary); color: var(--color-text-secondary); }
+  .cover-frame-outer {
+    position: absolute;
+    top: 12mm; left: 12mm; right: 12mm; bottom: 12mm;
+    border: 1.5px solid var(--gold);
+  }
+  .cover-frame-inner {
+    position: absolute;
+    top: 16mm; left: 16mm; right: 16mm; bottom: 16mm;
+    border: 0.75px solid var(--gold-light);
+  }
+
+  .cover-corner {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+  .cover-corner.tl { top: 11mm; left: 11mm; }
+  .cover-corner.tr { top: 11mm; right: 11mm; }
+  .cover-corner.bl { bottom: 11mm; left: 11mm; }
+  .cover-corner.br { bottom: 11mm; right: 11mm; }
+
+  .cover-content {
+    position: absolute;
+    top: 35mm; left: 25mm; right: 25mm; bottom: 30mm;
+    display: flex; flex-direction: column;
+    align-items: center;
+  }
+
+  .cover-overline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    color: var(--gold-dark);
+    letter-spacing: 8px;
+    margin-bottom: 8mm;
+  }
+
+  .cover-emblem {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--gold-deep);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 700;
+    font-size: 38px;
+    color: #fff;
+    margin-bottom: 12mm;
+    box-shadow: 0 4px 20px rgba(139,115,65,0.3);
+  }
+
+  .cover-title-zh {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 38px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 8px;
+    text-align: center;
+    margin-bottom: 4mm;
+  }
+
+  .cover-title-sub {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    color: var(--gold-dark);
+    letter-spacing: 6px;
+    margin-bottom: 8mm;
+  }
+
+  .cover-flourish {
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px;
+    margin-bottom: 14mm;
+  }
+  .cover-flourish-line {
+    width: 30px; height: 1px; background: var(--gold);
+  }
+  .cover-flourish-ornament {
+    color: var(--gold);
+    font-size: 14px;
+  }
+
+  .cover-fields {
+    width: 100%;
+    max-width: 130mm;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid var(--gold-light);
+    padding: 12mm 14mm;
+  }
+
+  .cover-field {
+    display: flex; align-items: baseline;
+    margin-bottom: 7mm;
+    font-size: 14px;
+  }
+  .cover-field:last-child { margin-bottom: 0; }
+  .cover-field-label {
+    font-family: 'Noto Serif TC', serif;
+    color: var(--brown);
+    font-weight: 500;
+    letter-spacing: 2px;
+    width: 28mm;
+    flex-shrink: 0;
+  }
+  .cover-field-line {
+    flex: 1;
+    border-bottom: 1px solid var(--gold-dark);
+    height: 6mm;
+    color: var(--gold-deep);
+    padding-left: 4mm;
+  }
+
+  /* 雙欄位 row(陪跑家長 + 陪跑群) */
+  .cover-field-dual {
+    display: flex;
+    gap: 8mm;
+    margin-bottom: 7mm;
+    font-size: 14px;
+  }
+  .cover-field-half {
+    display: flex;
+    align-items: baseline;
+    flex: 1;
+  }
+  .cover-field-half .cover-field-label {
+    width: 22mm;
+    flex-shrink: 0;
+    font-family: 'Noto Serif TC', serif;
+    color: var(--brown);
+    font-weight: 500;
+    letter-spacing: 2px;
+  }
+  .cover-field-half .cover-field-line {
+    flex: 1;
+    border-bottom: 1px solid var(--gold-dark);
+    height: 6mm;
+    color: var(--gold-deep);
+    padding-left: 4mm;
+  }
+
+  /* 封面 · 天賦能量區塊 */
+  .cover-energy-section {
+    margin-top: 8mm;
+    padding-top: 6mm;
+    border-top: 1px dashed var(--gold);
+  }
+  .cover-energy-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    color: var(--gold-dark);
+    letter-spacing: 5px;
+    text-align: center;
+    margin-bottom: 5mm;
+  }
+  .cover-energy-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4mm;
+  }
+  .cover-energy-cell {
+    text-align: center;
+  }
+  .cover-energy-head {
+    margin-bottom: 2mm;
+    white-space: nowrap;
+  }
+  .cover-energy-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 2mm;
+    vertical-align: middle;
+  }
+  .cover-energy-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    color: var(--brown);
+    font-weight: 700;
+    letter-spacing: 2px;
+    vertical-align: middle;
+  }
+  .cover-energy-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--gold-dark);
+    border-bottom: 0.75px solid var(--gold);
+    padding-bottom: 1mm;
+  }
+
+  .cover-bottom {
+    position: absolute;
+    bottom: 22mm; left: 0; right: 0;
+    text-align: center;
+  }
+  .cover-year {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--gold-dark);
+    letter-spacing: 5px;
+  }
+
+  /* ============================================
+     一般內容頁
+     ============================================ */
+  .page-inner {
+    padding: 22mm 22mm 25mm;
+  }
+
+  /* ============================================
+     PAGE 1 · 歡迎信
+     ============================================ */
+  .welcome-letter {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13.5px;
+    line-height: 2.1;
+    color: var(--brown);
+    text-align: justify;
+  }
+
+  .welcome-letter p {
+    margin-bottom: 5mm;
+    text-indent: 2em;
+  }
+
+  .welcome-letter p.no-indent { text-indent: 0; }
+
+  .welcome-letter .salutation {
+    font-size: 16px;
+    margin-bottom: 8mm;
+    text-indent: 0;
+    color: var(--brown);
+    font-weight: 500;
+  }
+
+  .welcome-letter .signature {
+    margin-top: 10mm;
+    text-align: right;
+    font-style: italic;
+    text-indent: 0;
+  }
+  .welcome-letter .signature-name {
+    font-size: 18px;
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 600;
+    color: var(--gold-dark);
+    margin-top: 2mm;
+  }
+
+  .core-values {
+    margin-top: 12mm;
+    padding-top: 10mm;
+    border-top: 1px solid var(--gold-light);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8mm;
+  }
+
+  .core-value {
+    text-align: center;
+  }
+  .core-value-icon {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 28px;
+    color: var(--gold);
+    margin-bottom: 2mm;
+  }
+  .core-value-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 2px;
+    margin-bottom: 2mm;
+  }
+  .core-value-desc {
+    font-size: 10.5px;
+    color: var(--gold-deep);
+    line-height: 1.6;
+  }
+
+  /* ============================================
+     PAGE 2 · 學習地圖
+     ============================================ */
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6mm;
+  }
+
+  .pillar-card {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--gold-light);
+    padding: 6mm 7mm;
+    position: relative;
+  }
+
+  .pillar-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+  }
+  .pillar-card.talent::before { background: var(--talent); }
+  .pillar-card.wealth::before { background: var(--wealth); }
+  .pillar-card.network::before { background: var(--network); }
+  .pillar-card.insight::before { background: var(--insight); }
+
+  .pillar-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 4mm;
+    padding-bottom: 3mm;
+    border-bottom: 1px dashed var(--gold-light);
+  }
+  .pillar-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 4px;
+  }
+  .pillar-name-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--gold-dark);
+    letter-spacing: 3px;
+  }
+
+  .pillar-courses {
+    list-style: none;
+  }
+  .pillar-courses li {
+    display: flex; align-items: center;
+    padding: 2.5mm 0;
+    font-size: 12px;
+    color: var(--brown);
+    border-bottom: 1px dotted rgba(201,169,97,0.3);
+  }
+  .pillar-courses li:last-child { border-bottom: none; }
+
+  .course-checkbox {
+    width: 4mm; height: 4mm;
+    border: 1.2px solid var(--gold-dark);
+    margin-right: 3mm;
+    flex-shrink: 0;
+  }
+  .course-name {
+    flex: 1;
+    font-weight: 500;
+  }
+  .course-note {
+    font-size: 9.5px;
+    color: var(--gold-deep);
+    margin-left: 2mm;
+  }
+  .course-date {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-dark);
+    font-size: 10px;
+    border-bottom: 0.5px solid var(--gold-light);
+    width: 18mm;
+    text-align: center;
+    margin-left: 3mm;
+  }
+
+  .map-footnote {
+    margin-top: 6mm;
+    text-align: center;
+    font-size: 10.5px;
+    font-style: italic;
+    color: var(--gold-deep);
+  }
+
+  /* ============================================
+     PAGE 3 · 年度時間軸
+     ============================================ */
+  .timeline-intro {
+    text-align: center;
+    margin-bottom: 8mm;
+    font-size: 11.5px;
+    color: var(--gold-deep);
+    font-style: italic;
+  }
+
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4mm 6mm;
+  }
+
+  .month-row {
+    display: flex;
+    align-items: stretch;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--gold-light);
+    border-left-width: 3px;
+    border-left-color: var(--gold);
+    padding: 3mm 4mm;
+    min-height: 14mm;
+  }
+  .month-row.talent { border-left-color: var(--talent); }
+  .month-row.wealth { border-left-color: var(--wealth); }
+  .month-row.network { border-left-color: var(--network); }
+  .month-row.insight { border-left-color: var(--insight); }
+
+  .month-num {
+    width: 18mm;
+    flex-shrink: 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-dark);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    padding-top: 1mm;
+  }
+  .month-num strong {
+    display: block;
+    font-size: 14px;
+    color: var(--brown);
+    font-style: normal;
+    font-weight: 600;
+    letter-spacing: 0;
+    margin-bottom: 1mm;
+  }
+  .month-content {
+    flex: 1;
+    font-size: 11px;
+    color: var(--brown);
+    line-height: 1.5;
+  }
+  .month-content strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5mm;
+    font-size: 11.5px;
+  }
+  .month-tag {
+    font-size: 9px;
+    color: var(--gold-deep);
+    letter-spacing: 1px;
+  }
+
+  .timeline-legend {
+    display: flex;
+    justify-content: center;
+    gap: 8mm;
+    margin-top: 8mm;
+    font-size: 10px;
+    color: var(--gold-deep);
+  }
+  .legend-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 2mm;
+    vertical-align: middle;
+  }
+
+  /* ============================================
+     PAGE 4 · 五步驟
+     ============================================ */
+  .step-intro {
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--gold-deep);
+    font-style: italic;
+    margin-bottom: 10mm;
+  }
+
+  .step-list {
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .step-item {
+    display: flex; gap: 6mm;
+    padding: 6mm 0;
+    border-bottom: 1px dashed var(--gold-light);
+  }
+  .step-item:last-child { border-bottom: none; }
+
+  .step-number {
+    flex-shrink: 0;
+    width: 14mm; height: 14mm;
+    border-radius: 50%;
+    background: var(--cream-warm);
+    border: 1.5px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 700;
+    font-size: 22px;
+    color: var(--gold-dark);
+  }
+
+  .step-body {
+    flex: 1;
+  }
+
+  .step-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 2mm;
+  }
+  .step-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 2px;
+  }
+  .step-checkbox {
+    display: flex; align-items: center;
+    gap: 2mm;
+    font-size: 10px;
+    color: var(--gold-deep);
+  }
+  .step-checkbox-box {
+    width: 5mm; height: 5mm;
+    border: 1.5px solid var(--gold-dark);
+  }
+
+  .step-desc {
+    font-size: 12px;
+    color: var(--brown);
+    line-height: 1.7;
+    margin-bottom: 2mm;
+  }
+  .step-tip {
+    font-size: 10.5px;
+    color: var(--gold-deep);
+    font-style: italic;
+    padding-left: 4mm;
+    border-left: 2px solid var(--gold-light);
+  }
+
+  /* ============================================
+     PAGE 5 · 第一個月清單
+     ============================================ */
+  .month-tracker {
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--gold);
+    padding: 14mm 16mm;
+    position: relative;
+  }
+
+  .tracker-header {
+    text-align: center;
+    margin-bottom: 10mm;
+    padding-bottom: 6mm;
+    border-bottom: 1px solid var(--gold-light);
+  }
+  .tracker-headline {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 3px;
+    margin-bottom: 2mm;
+  }
+  .tracker-sub {
+    font-size: 11px;
+    color: var(--gold-deep);
+    font-style: italic;
+  }
+
+  .tracker-list {
+    list-style: none;
+  }
+
+  .tracker-item {
+    display: flex; align-items: flex-start;
+    gap: 5mm;
+    padding: 5mm 0;
+    border-bottom: 1px dotted var(--gold-light);
+  }
+  .tracker-item:last-child { border-bottom: none; }
+
+  .tracker-checkbox {
+    flex-shrink: 0;
+    width: 7mm; height: 7mm;
+    border: 1.5px solid var(--gold-dark);
+    margin-top: 1mm;
+    position: relative;
+  }
+
+  .tracker-content {
+    flex: 1;
+  }
+  .tracker-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 1mm;
+    letter-spacing: 1px;
+  }
+  .tracker-desc {
+    font-size: 11px;
+    color: var(--gold-deep);
+    line-height: 1.6;
+  }
+  .tracker-date {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    color: var(--gold-dark);
+    flex-shrink: 0;
+    border-bottom: 0.5px solid var(--gold-light);
+    width: 22mm;
+    text-align: center;
+    align-self: center;
+  }
+
+  .tracker-celebration {
+    margin-top: 10mm;
+    padding-top: 8mm;
+    border-top: 1px solid var(--gold-light);
+    text-align: center;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--brown);
+  }
+  .tracker-celebration strong { color: var(--gold-dark); font-weight: 600; }
+
+  /* ============================================
+     PAGE 6 · 求助對應表
+     ============================================ */
+  .help-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5mm;
+  }
+
+  .help-card {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--gold-light);
+    padding: 6mm 7mm;
+    position: relative;
+    min-height: 50mm;
+  }
+  .help-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+
+  .help-when {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    color: var(--gold-dark);
+    letter-spacing: 3px;
+    margin-bottom: 3mm;
+  }
+  .help-topic {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 4mm;
+    letter-spacing: 1px;
+  }
+  .help-arrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 24px;
+    color: var(--gold);
+    margin: 2mm 0;
+    text-align: center;
+  }
+  .help-who {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-dark);
+    text-align: center;
+    letter-spacing: 3px;
+    margin-bottom: 2mm;
+  }
+  .help-note {
+    font-size: 10px;
+    color: var(--gold-deep);
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .help-bottom {
+    margin-top: 8mm;
+    background: var(--cream-warm);
+    border: 1px solid var(--gold);
+    padding: 6mm 8mm;
+    text-align: center;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 12.5px;
+    color: var(--brown);
+    line-height: 1.7;
+  }
+  .help-bottom strong { color: var(--gold-dark); }
+
+  /* ============================================
+     PAGE 7 · 共識
+     ============================================ */
+  .agreement-list {
+    list-style: none;
+  }
+
+  .agreement-item {
+    display: flex; gap: 6mm;
+    padding: 6mm 0;
+    border-bottom: 1px dashed var(--gold-light);
+  }
+  .agreement-item:last-child { border-bottom: none; }
+
+  .agreement-mark {
+    flex-shrink: 0;
+    width: 12mm; height: 12mm;
+    background: var(--cream-warm);
+    border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--gold-dark);
+    font-weight: 700;
+  }
+
+  .agreement-body {
+    flex: 1;
+  }
+  .agreement-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 2mm;
+    letter-spacing: 1px;
+  }
+  .agreement-desc {
+    font-size: 11.5px;
+    color: var(--gold-deep);
+    line-height: 1.7;
+  }
+
+  /* ============================================
+     PAGE 8 · 學苑不做什麼
+     ============================================ */
+  .boundaries-intro {
+    text-align: center;
+    font-size: 12px;
+    color: var(--brown);
+    line-height: 1.8;
+    margin-bottom: 10mm;
+    padding: 0 10mm;
+  }
+  .boundaries-intro strong { color: var(--red); font-weight: 600; }
+
+  .boundaries-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5mm;
+  }
+
+  .boundary-card {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--gold-light);
+    padding: 6mm 7mm;
+    text-align: center;
+  }
+  .boundary-x {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: var(--red);
+    margin-bottom: 2mm;
+    font-weight: 600;
+  }
+  .boundary-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 3mm;
+    letter-spacing: 1px;
+  }
+  .boundary-desc {
+    font-size: 10.5px;
+    color: var(--gold-deep);
+    line-height: 1.7;
+    text-align: left;
+  }
+
+  .boundaries-promise {
+    margin-top: 10mm;
+    background: var(--cream-warm);
+    border-top: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    padding: 8mm 10mm;
+    text-align: center;
+  }
+  .boundaries-promise-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--gold-dark);
+    letter-spacing: 5px;
+    margin-bottom: 3mm;
+  }
+  .boundaries-promise-text {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    color: var(--brown);
+    line-height: 1.9;
+  }
+  .boundaries-promise-text strong { color: var(--gold-dark); font-weight: 600; }
+
+  /* ============================================
+     PAGE 9 · QR + 求助
+     ============================================ */
+  .qr-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8mm;
+    margin-bottom: 10mm;
+  }
+
+  .qr-card {
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--gold-light);
+    padding: 8mm;
+    text-align: center;
+  }
+
+  .qr-placeholder {
+    width: 50mm; height: 50mm;
+    margin: 0 auto 5mm;
+    background:
+      repeating-linear-gradient(0deg, var(--cream-edge) 0 4px, transparent 4px 8px),
+      repeating-linear-gradient(90deg, var(--cream-edge) 0 4px, transparent 4px 8px),
+      var(--cream);
+    border: 1.5px dashed var(--gold-dark);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold-dark);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .qr-label {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 2px;
+    margin-bottom: 2mm;
+  }
+  .qr-desc {
+    font-size: 10.5px;
+    color: var(--gold-deep);
+    line-height: 1.5;
+  }
+
+  .qr-help-box {
+    background: var(--cream-warm);
+    border: 1px solid var(--gold);
+    padding: 7mm 10mm;
+    text-align: center;
+    font-family: 'Noto Serif TC', serif;
+  }
+  .qr-help-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    color: var(--gold-dark);
+    letter-spacing: 5px;
+    margin-bottom: 2mm;
+  }
+  .qr-help-text {
+    font-size: 14px;
+    color: var(--brown);
+    line-height: 1.8;
+  }
+  .qr-help-text strong { color: var(--gold-dark); font-weight: 600; }
+
+  /* ============================================
+     PAGE 10+ · 結構化筆記頁
+     ============================================ */
+  .note-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 8mm;
+    padding-bottom: 4mm;
+    border-bottom: 1px solid var(--gold);
+  }
+  .note-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 3px;
+  }
+  .note-meta {
+    display: flex; gap: 8mm;
+    font-size: 10.5px;
+    color: var(--gold-deep);
+  }
+  .note-meta-item {
+    display: flex; align-items: baseline; gap: 2mm;
+  }
+  .note-meta-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--gold-dark);
+    letter-spacing: 1.5px;
+  }
+  .note-meta-line {
+    border-bottom: 0.5px solid var(--gold-light);
+    width: 22mm;
+    height: 5mm;
+  }
+
+  .note-section {
+    margin-bottom: 8mm;
+  }
+  .note-section-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    color: var(--gold-dark);
+    letter-spacing: 4px;
+    margin-bottom: 2mm;
+  }
+  .note-section-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--brown);
+    margin-bottom: 4mm;
+    letter-spacing: 1.5px;
+  }
+  .note-lines {
+    background-image: linear-gradient(to bottom, transparent 7mm, rgba(139,115,65,0.25) 7mm, rgba(139,115,65,0.25) calc(7mm + 0.5px), transparent calc(7mm + 0.5px));
+    background-size: 100% 7mm;
+    height: 35mm;
+  }
+  .note-lines.short { height: 21mm; }
+  .note-lines.medium { height: 28mm; }
+  .note-lines.tall { height: 70mm; }
+
+  /* ============================================
+     PAGE 2 · 你的天賦能量
+     ============================================ */
+  .talent-intro {
+    text-align: center;
+    margin-bottom: 8mm;
+    font-size: 12.5px;
+    color: var(--brown);
+    line-height: 1.9;
+    font-style: italic;
+  }
+  .talent-intro strong {
+    color: var(--gold-dark);
+    font-weight: 600;
+    font-style: normal;
+  }
+
+  .energy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5mm;
+    margin-bottom: 7mm;
+  }
+
+  .energy-card {
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--gold-light);
+    padding: 6mm 7mm;
+    display: flex;
+    gap: 5mm;
+    align-items: flex-start;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(139,115,65,0.08);
+  }
+
+  .energy-card::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    border: 0.5px solid rgba(201,169,97,0.25);
+    pointer-events: none;
+  }
+
+  .energy-badge {
+    flex-shrink: 0;
+    width: 14mm; height: 14mm;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .energy-card.dynamo .energy-badge { background: linear-gradient(135deg, #6FBF8A 0%, #3F8F58 100%); }
+  .energy-card.flame .energy-badge { background: linear-gradient(135deg, #F09148 0%, #B85C18 100%); }
+  .energy-card.tempo .energy-badge { background: linear-gradient(135deg, #DDB87A 0%, #9A7A3F 100%); }
+  .energy-card.steel .energy-badge { background: linear-gradient(135deg, #909090 0%, #4A4A4A 100%); }
+
+  .energy-content {
+    flex: 1;
+  }
+
+  .energy-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 4px;
+    margin-bottom: 2mm;
+  }
+
+  .energy-divider {
+    width: 18px;
+    height: 1.5px;
+    background: var(--gold);
+    margin-bottom: 3mm;
+  }
+
+  .energy-traits {
+    font-size: 11.5px;
+    color: var(--gold-deep);
+    line-height: 1.8;
+    letter-spacing: 1.5px;
+  }
+
+  .energy-result {
+    background: var(--cream-warm);
+    border: 1px solid var(--gold);
+    padding: 6mm 8mm;
+    margin-bottom: 6mm;
+    position: relative;
+  }
+  .energy-result::before, .energy-result::after {
+    content: '✦';
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 10px;
+  }
+  .energy-result::before { left: 4mm; }
+  .energy-result::after { right: 4mm; }
+
+  .energy-result-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    color: var(--gold-dark);
+    letter-spacing: 5px;
+    margin-bottom: 4mm;
+    text-align: center;
+  }
+
+  .energy-result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5mm;
+  }
+
+  .energy-result-item {
+    text-align: center;
+  }
+
+  .energy-result-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 11px;
+    color: var(--brown);
+    font-weight: 600;
+    margin-bottom: 2mm;
+    letter-spacing: 1px;
+  }
+
+  .energy-result-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--gold-dark);
+    border-bottom: 1px solid var(--gold);
+    padding-bottom: 1mm;
+  }
+
+  .test-cta {
+    background: var(--ink);
+    padding: 6mm 8mm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6mm;
+    position: relative;
+    border: 1px solid var(--gold-dark);
+  }
+  .test-cta::before {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px; right: 3px; bottom: 3px;
+    border: 0.5px solid var(--gold);
+    pointer-events: none;
+  }
+
+  .test-cta-content {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+  .test-cta-eyebrow {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 10px;
+    color: var(--gold-light);
+    letter-spacing: 5px;
+    margin-bottom: 2mm;
+  }
+  .test-cta-headline {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 4px;
+    margin-bottom: 2mm;
+  }
+  .test-cta-sub {
+    font-size: 10.5px;
+    color: var(--cream);
+    opacity: 0.85;
+    line-height: 1.7;
+  }
+
+  .test-qr {
+    width: 26mm; height: 26mm;
+    background:
+      repeating-linear-gradient(0deg, rgba(232,213,163,0.3) 0 4px, transparent 4px 8px),
+      repeating-linear-gradient(90deg, rgba(232,213,163,0.3) 0 4px, transparent 4px 8px),
+      var(--cream);
+    border: 1.5px dashed var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold-dark);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 9px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ============================================
+     PAGE 4 · 年度課程頻率概覽圖(橫式)
+     ============================================ */
+  .page-timeline {
+    width: 297mm;
+    min-height: 210mm;
+    background: linear-gradient(135deg, #FFF8E7 0%, var(--cream-warm) 50%, #F0E0BC 100%);
+  }
+
+  .timeline-inner {
+    padding: 14mm 16mm 18mm;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .timeline-inner .page-eyebrow { margin-bottom: 4mm; }
+  .timeline-inner .page-title { margin-bottom: 2mm; font-size: 28px; }
+  .timeline-inner .page-title-en { margin-bottom: 5mm; }
+  .timeline-inner .gold-divider { margin-bottom: 6mm; }
+
+  .annual-overview {
+    display: grid;
+    grid-template-columns: 32mm repeat(12, 1fr);
+    grid-template-rows: 14mm 22mm 22mm 38mm 30mm;
+    gap: 1.5mm;
+    flex: 1;
+  }
+
+  .ao-corner {
+    background: transparent;
+  }
+
+  .ao-month {
+    background: rgba(255,255,255,0.7);
+    border: 0.5px solid var(--gold-light);
+    border-radius: 5px;
+    text-align: center;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brown);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(139,115,65,0.08);
+  }
+  .ao-month-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 8px;
+    color: var(--gold-dark);
+    margin-top: 0.5mm;
+    letter-spacing: 1.5px;
+    font-weight: 400;
+  }
+
+  .ao-lane-label {
+    background: linear-gradient(135deg, #FFFFFF, var(--cream-warm));
+    border: 1px solid var(--gold);
+    border-radius: 8px;
+    padding: 3mm 4mm;
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    box-shadow: 0 2px 6px rgba(139,115,65,0.12);
+  }
+  .ao-lane-icon {
+    width: 9mm; height: 9mm;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    border: 1.5px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .ao-lane-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 1.5px;
+    line-height: 1.35;
+  }
+
+  .ao-event {
+    border-radius: 10px;
+    padding: 2mm 3mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    font-family: 'Noto Serif TC', serif;
+  }
+  .ao-event::before {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 7px;
+    pointer-events: none;
+  }
+  .ao-event-tag {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 8.5px;
+    background: rgba(255,255,255,0.28);
+    padding: 0.5mm 2.5mm;
+    border-radius: 8px;
+    margin-bottom: 1.5mm;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 1;
+  }
+  .ao-event-name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1.3;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 季節大課顏色 */
+  .ao-event.spring  { background: linear-gradient(135deg, #E8744E, #C0492A); }
+  .ao-event.summer  { background: linear-gradient(135deg, #5BA378, #3D7C52); }
+  .ao-event.autumn  { background: linear-gradient(135deg, #8E6FB5, #6242A0); }
+
+  /* 影響力班顏色 */
+  .ao-event.influence-1 { background: linear-gradient(135deg, #F2A86A, #D77638); }
+  .ao-event.influence-2 { background: linear-gradient(135deg, #E89BA0, #BC5862); }
+  .ao-event.influence-3 { background: linear-gradient(135deg, #7DB1D4, #4F7FA0); }
+
+  /* 心跳 row */
+  .ao-heartbeat {
+    background: rgba(255,255,255,0.5);
+    border: 0.5px solid var(--gold-light);
+    border-radius: 8px;
+    padding: 3mm 4mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 2mm;
+  }
+  .hb-line {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+  }
+  .hb-icon {
+    width: 7mm; height: 7mm;
+    border-radius: 50%;
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    border: 1.5px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .hb-icon.gear   { background: linear-gradient(135deg, #6BBE91, #3D8559); }
+  .hb-icon.people { background: linear-gradient(135deg, #F0AC78, #C7763C); }
+  .hb-icon.heart  { background: linear-gradient(135deg, #E58FAC, #B85478); }
+  .hb-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--brown);
+    width: 32mm;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+  }
+  .hb-dots {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    align-items: center;
+    height: 6mm;
+    background: linear-gradient(90deg, transparent, var(--gold-light) 20%, var(--gold-light) 80%, transparent);
+    background-size: 100% 1px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .hb-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+  .hb-marker {
+    width: 4mm; height: 4mm;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+    border: 1px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .hb-marker.gear-m   { background: linear-gradient(135deg, #6BBE91, #3D8559); }
+  .hb-marker.people-m { background: linear-gradient(135deg, #F0AC78, #C7763C); }
+  .hb-marker.heart-m  { background: linear-gradient(135deg, #E58FAC, #B85478); }
+  .hb-freq {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 9px;
+    color: var(--gold-dark);
+    width: 24mm;
+    text-align: right;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+  }
+
+  /* 焦點事件 */
+  .ao-focus {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 1mm 0.5mm;
+  }
+  .ao-focus-circle {
+    width: 13mm; height: 13mm;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 1.5mm;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.22);
+    border: 2px solid white;
+  }
+  .ao-focus-month {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 9px;
+    color: var(--gold-dark);
+    margin-bottom: 0.5mm;
+    letter-spacing: 0.5px;
+  }
+  .ao-focus-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--brown);
+    line-height: 1.3;
+    letter-spacing: 0.5px;
+  }
+  .ao-focus-sub {
+    font-size: 7.5px;
+    color: var(--gold-deep);
+    margin-top: 0.5mm;
+    line-height: 1.3;
+  }
+
+  .ao-legend {
+    margin-top: 5mm;
+    display: flex;
+    justify-content: center;
+    gap: 10mm;
+    font-size: 9.5px;
+    color: var(--gold-deep);
+    font-family: 'Noto Serif TC', serif;
+  }
+  .ao-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+  }
+  .ao-legend-pill {
+    width: 12mm; height: 4mm;
+    border-radius: 4px;
+  }
+  .ao-legend-dot {
+    width: 4mm; height: 4mm;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6BBE91, #3D8559);
+    border: 1px solid white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .ao-legend-circle {
+    width: 5mm; height: 5mm;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4A858, var(--gold-dark));
+    border: 1.5px solid white;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+  }
+
+  .timeline-footnote {
+    margin-top: 4mm;
+    text-align: center;
+    font-size: 10px;
+    font-style: italic;
+    color: var(--gold-deep);
+  }
+
+  /* ============================================
+     PAGE 2 · 學習路徑地圖
+     ============================================ */
+  .paths-intro {
+    text-align: center;
+    margin-bottom: 8mm;
+    font-size: 13px;
+    color: var(--brown);
+    line-height: 1.9;
+    font-style: italic;
+  }
+  .paths-intro strong {
+    color: var(--gold-dark);
+    font-weight: 600;
+    font-style: normal;
+  }
+
+  .paths-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5mm;
+    margin-bottom: 4mm;
+  }
+
+  .path-row {
+    display: flex;
+    align-items: stretch;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--gold-light);
+    border-radius: 8px;
+    padding: 5mm 7mm;
+    position: relative;
+    box-shadow: 0 2px 6px rgba(139,115,65,0.08);
+    min-height: 38mm;
+    overflow: hidden;
+  }
+  .path-row::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+  }
+  .path-row.talent::before  { background: var(--talent); }
+  .path-row.wealth::before  { background: var(--wealth); }
+  .path-row.network::before { background: var(--network); }
+  .path-row.insight::before { background: var(--insight); }
+
+  .path-label {
+    width: 32mm;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-right: 4mm;
+    margin-right: 4mm;
+    border-right: 1px dashed var(--gold-light);
+  }
+  .path-pillar {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 5px;
+    margin-bottom: 1mm;
+    line-height: 1.2;
+  }
+  .path-pillar-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 9px;
+    color: var(--gold-dark);
+    letter-spacing: 2px;
+  }
+
+  .path-stations {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    position: relative;
+  }
+
+  /* 連接路徑線 */
+  .path-stations::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 5%; right: 5%;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--gold-light) 5%, var(--gold) 50%, var(--gold-light) 95%, transparent);
+    z-index: 1;
+    transform: translateY(-2.5mm);
+  }
+  .path-stations.modular::before {
+    background: repeating-linear-gradient(90deg, var(--gold) 0 4px, transparent 4px 9px);
+    height: 1px;
+    opacity: 0.55;
+  }
+
+  .path-station {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    padding: 0 1mm;
+  }
+
+  .path-stage {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 9px;
+    color: var(--gold-dark);
+    letter-spacing: 3px;
+    margin-bottom: 2mm;
+  }
+
+  .path-circle {
+    width: 12mm; height: 12mm;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFFFFF, var(--cream-warm));
+    border: 1.5px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--gold-dark);
+    margin-bottom: 3mm;
+    box-shadow: 0 3px 8px rgba(139,115,65,0.25);
+  }
+
+  .path-course {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brown);
+    letter-spacing: 1px;
+    margin-bottom: 1mm;
+    line-height: 1.3;
+  }
+
+  .path-tag {
+    font-size: 10px;
+    color: var(--gold-deep);
+    font-style: italic;
+    letter-spacing: 0.5px;
+  }
+
+  .paths-footnote {
+    text-align: center;
+    font-size: 11px;
+    font-style: italic;
+    color: var(--gold-deep);
+    margin-top: 4mm;
+  }
+
+  /* ============================================
+     PAGE 3 · 年度課程概覽(直式 A4)
+     ============================================ */
+  .annual-portrait {
+    display: grid;
+    grid-template-columns: 17mm 1fr 1fr 1fr 1fr 1.15fr;
+    grid-template-rows: 13mm repeat(12, 13mm);
+    gap: 1.2mm;
+    margin-bottom: 5mm;
+  }
+
+  /* 合併版 — 5 欄(月份 + 4 道資訊) */
+  .annual-portrait.merged {
+    grid-template-columns: 17mm 1fr 1.4fr 1fr 1fr;
+  }
+
+  /* 季節大課內疊放的年度焦點小標 */
+  .ap-focus-overlay {
+    position: absolute;
+    bottom: 1.5mm;
+    left: 1.5mm;
+    right: 1.5mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5mm;
+    padding: 1mm 2mm;
+    border-radius: 10px;
+    border: 0.75px solid rgba(255,255,255,0.5);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    color: white;
+    z-index: 2;
+  }
+  .ap-focus-overlay .ofo-icon {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .ap-focus-overlay .ofo-text {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  /* 焦點獨立色塊(7月 / 11月) */
+  .ap-focus-block {
+    border-radius: 8px;
+    padding: 1.5mm 2mm;
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    color: white;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+    position: relative;
+  }
+  .ap-focus-block::before {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .ap-focus-circle-inline {
+    width: 7mm; height: 7mm;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 12px;
+    border: 1.2px solid white;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .ap-focus-text {
+    flex: 1;
+    z-index: 1;
+  }
+  .ap-focus-text strong {
+    display: block;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+  }
+  .ap-focus-text span {
+    display: block;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 8px;
+    opacity: 0.9;
+    margin-top: 0.5mm;
+  }
+
+  /* 例行課程 muted 樣式(透明/淡色) */
+  .ap-event.muted {
+    background: rgba(255, 248, 231, 0.55) !important;
+    color: var(--brown) !important;
+    border: 1px solid var(--gold-light);
+    box-shadow: 0 1px 3px rgba(139,115,65,0.08) !important;
+  }
+  .ap-event.muted::before {
+    border: 0.5px solid rgba(201, 169, 97, 0.25) !important;
+  }
+  .ap-event.muted .ap-tag {
+    background: rgba(201, 169, 97, 0.18) !important;
+    color: var(--gold-dark) !important;
+  }
+  .ap-event.muted .ap-name {
+    color: var(--brown) !important;
+  }
+  .ap-legend-pill.muted-pill {
+    background: rgba(255, 248, 231, 0.7);
+    border: 1px solid var(--gold-light);
+  }
+
+  /* 課程開課 pill(順流實戰、人生解憂) */
+  .ap-pill {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid var(--gold-light);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2mm;
+    padding: 0 3mm;
+    box-shadow: 0 2px 5px rgba(139,115,65,0.12);
+  }
+  .ap-pill.gear  { border-color: #6BBE91; }
+  .ap-pill.heart { border-color: #E58FAC; }
+  .ap-pill-dot {
+    width: 4mm; height: 4mm;
+    border-radius: 50%;
+    border: 1px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+  }
+  .ap-pill-text {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 1.5px;
+  }
+
+  .ap-corner { background: transparent; }
+
+  .ap-lane-header {
+    background: linear-gradient(135deg, #FFFFFF, var(--cream-warm));
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    padding: 1.5mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5mm;
+    box-shadow: 0 2px 4px rgba(139,115,65,0.12);
+  }
+  .ap-lane-icon {
+    width: 6mm; height: 6mm;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 9px;
+    font-weight: 700;
+    border: 1.2px solid white;
+  }
+  .ap-lane-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--brown);
+    letter-spacing: 1px;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .ap-month {
+    background: rgba(255,255,255,0.7);
+    border: 0.5px solid var(--gold-light);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif TC', serif;
+  }
+  .ap-m-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brown);
+    line-height: 1;
+  }
+  .ap-m-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 7.5px;
+    color: var(--gold-dark);
+    letter-spacing: 1.5px;
+    margin-top: 0.5mm;
+  }
+
+  .ap-event {
+    border-radius: 8px;
+    padding: 1.5mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    position: relative;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+    font-family: 'Noto Serif TC', serif;
+  }
+  .ap-event::before {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px; right: 2px; bottom: 2px;
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  .ap-event .ap-tag {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 8px;
+    background: rgba(255,255,255,0.3);
+    padding: 0.5mm 2mm;
+    border-radius: 6px;
+    margin-bottom: 1.5mm;
+    position: relative;
+    z-index: 1;
+    letter-spacing: 0.3px;
+  }
+  .ap-event .ap-name {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1.3;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ap-event.gear-event { background: linear-gradient(135deg, #D4A858, #8B6F2A); }
+  .ap-event.heart-event { background: linear-gradient(135deg, #E58FAC, #B85478); }
+  .ap-event.spring  { background: linear-gradient(135deg, #E8744E, #C0492A); }
+  .ap-event.summer  { background: linear-gradient(135deg, #5BA378, #3D7C52); }
+  .ap-event.autumn  { background: linear-gradient(135deg, #8E6FB5, #6242A0); }
+  .ap-event.influence-1 { background: linear-gradient(135deg, #F2A86A, #D77638); }
+  .ap-event.influence-2 { background: linear-gradient(135deg, #E89BA0, #BC5862); }
+  .ap-event.influence-3 { background: linear-gradient(135deg, #7DB1D4, #4F7FA0); }
+
+  .ap-empty {
+    background: rgba(255,255,255,0.18);
+    border-radius: 4px;
+  }
+
+  .ap-heart {
+    background: rgba(255,255,255,0.55);
+    border: 0.5px solid var(--gold-light);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5mm;
+  }
+  .ap-dot {
+    width: 4mm; height: 4mm;
+    border-radius: 50%;
+    border: 1px solid white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    display: inline-block;
+  }
+  .ap-d-gear   { background: linear-gradient(135deg, #6BBE91, #3D8559); }
+  .ap-d-people { background: linear-gradient(135deg, #F0AC78, #C7763C); }
+  .ap-d-heart  { background: linear-gradient(135deg, #E58FAC, #B85478); }
+
+  .ap-focus {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2mm;
+    padding: 1mm 2mm;
+    background: rgba(255,255,255,0.4);
+    border-radius: 4px;
+  }
+  .ap-focus.dual {
+    justify-content: space-around;
+    padding: 0.5mm;
+  }
+  .ap-f-mini {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5mm;
+    flex: 1;
+  }
+  .ap-f-circle {
+    width: 8mm; height: 8mm;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 700;
+    font-size: 11px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.22);
+    border: 1.5px solid white;
+    flex-shrink: 0;
+  }
+  .ap-f-circle.small {
+    width: 6.5mm; height: 6.5mm;
+    font-size: 9px;
+  }
+  .ap-f-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--brown);
+    line-height: 1.3;
+    flex: 1;
+  }
+  .ap-f-name.tiny {
+    font-size: 7.5px;
+    text-align: center;
+  }
+  .ap-f-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 7.5px;
+    color: var(--gold-dark);
+    font-weight: 400;
+    letter-spacing: 0.3px;
+  }
+
+  .ap-legend {
+    margin-top: 5mm;
+    display: flex;
+    justify-content: center;
+    gap: 5mm;
+    flex-wrap: wrap;
+    font-size: 9.5px;
+    color: var(--gold-deep);
+    font-family: 'Noto Serif TC', serif;
+  }
+  .ap-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5mm;
+  }
+  .ap-legend-pill {
+    width: 8mm; height: 3mm;
+    border-radius: 3px;
+  }
+
+  .ap-footnote {
+    margin-top: 4mm;
+    text-align: center;
+    font-size: 10px;
+    font-style: italic;
+    color: var(--gold-deep);
+  }
+
+  /* 列印 */
+  @media print {
+    body { background: white; padding: 0; }
+    .deck-info { display: none; }
+    .page {
+      box-shadow: none;
+      margin: 0;
+      width: 210mm;
+      min-height: 297mm;
+      page-break-after: always;
+    }
+  }
 </style>
+</head>
+<body>
 
-<div class="app">
-<div class="topbar">
-  <div style="width:28px;height:28px;background:var(--color-background-info);border-radius:6px;display:flex;align-items:center;justify-content:center;">
-    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="var(--color-text-info)" stroke-width="1.5"/><path d="M8 5v4l2.5 1.5" stroke="var(--color-text-info)" stroke-width="1.5" stroke-linecap="round"/></svg>
-  </div>
-  <span class="studio-name">Jazzy Dance — 點數系統</span>
-  <span id="today-date" style="font-size:12px;color:var(--color-text-secondary);margin-left:auto;"></span>
-</div>
+<div class="deck-info">RICH MEMBER HANDBOOK · 新人學習手冊 · v2.6</div>
 
-<div class="tabs">
-  <button class="tab active" onclick="showTab('members')">學員總覽</button>
-  <button class="tab" onclick="showTab('checkin')">出席登記</button>
-  <button class="tab" onclick="showTab('purchase')">購課登記</button>
-  <button class="tab" onclick="showTab('newmember')">新增學員</button>
-</div>
+<!-- ============================================
+     封面
+     ============================================ -->
+<section class="page page-cover">
+  <div class="gold-bar-top"></div>
+  <div class="cover-frame-outer"></div>
+  <div class="cover-frame-inner"></div>
+  <div class="cover-corner tl"></div>
+  <div class="cover-corner tr"></div>
+  <div class="cover-corner bl"></div>
+  <div class="cover-corner br"></div>
 
-<div class="content">
-  <div id="tab-members" class="wrap">
-    <div class="search-bar">
-      <input type="text" placeholder="搜尋姓名或學員編號..." id="member-search" oninput="renderMembers()" />
-      <select id="filter-status" onchange="renderMembers()">
-        <option value="all">所有學員</option>
-        <option value="active">有效點數</option>
-        <option value="warning">即將到期 (7天內)</option>
-        <option value="expired">已過期</option>
-      </select>
-    </div>
-    <div id="alert-msg" class="alert"></div>
-    <div id="member-count" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:12px;"></div>
-    <div class="member-grid" id="member-grid"></div>
-    
-    <div class="detail-overlay" id="detail-overlay">
-      <button class="back-btn" onclick="closeDetail()">← 返回列表</button>
-      <div id="detail-content"></div>
-    </div>
-  </div>
+  <div class="cover-content">
+    <div class="cover-overline">EASY RICH ACADEMY</div>
 
-  <div id="tab-checkin" style="display:none;" class="wrap">
-    <div class="form-section">
-      <div class="alert" id="checkin-alert"></div>
-      <div class="form-group">
-        <label>學員搜尋</label>
-        <input type="text" id="checkin-search" placeholder="輸入姓名或編號..." oninput="searchMemberForForm('checkin')" />
-        <div id="checkin-suggestions" style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-top:4px;overflow:hidden;display:none;"></div>
-      </div>
-      <div id="checkin-member-info" style="display:none;">
-        <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr;">
-          <div class="stat-card"><div class="stat-label">現有點數</div><div class="stat-value" id="ci-points">-</div></div>
-          <div class="stat-card"><div class="stat-label">效期</div><div class="stat-value" style="font-size:14px;padding-top:4px;" id="ci-expiry">-</div></div>
-          <div class="stat-card"><div class="stat-label">狀態</div><div class="stat-value" style="font-size:14px;padding-top:4px;" id="ci-status">-</div></div>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>出席狀況</label>
-          <select id="ci-attendance">
-            <option value="有出席">有出席</option>
-            <option value="課前24小時以內請假">24hr內請假</option>
-            <option value="未出席">未出席</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>扣除點數</label>
-          <input type="number" id="ci-deduct" min="1" max="10" value="3" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>課程名稱</label>
-        <input type="text" id="ci-course" placeholder="例：【週五】19:00-20:30 抒情爵士(L4)｜學魚" />
-      </div>
-      <div class="form-group">
-        <label>登打日期</label>
-        <input type="date" id="ci-date" />
-      </div>
-      <div class="form-group">
-        <label>現場收錢人員 / 備註</label>
-        <input type="text" id="ci-staff" placeholder="例：學魚 / 匯款末五碼" />
-      </div>
-      <div class="form-actions">
-        <button onclick="submitCheckin()">確認扣點 →</button>
-        <button onclick="resetCheckin()" style="color:var(--color-text-secondary);">重設</button>
-      </div>
+    <div class="cover-emblem">Rich</div>
+
+    <div class="cover-title-zh">新 人 學 習 手 冊</div>
+    <div class="cover-title-sub">MEMBER HANDBOOK</div>
+
+    <div class="cover-flourish">
+      <div class="cover-flourish-line"></div>
+      <div class="cover-flourish-ornament">✦</div>
+      <div class="cover-flourish-line"></div>
     </div>
 
-    <div style="margin-top:32px;">
-      <div class="section-title">今日出席記錄</div>
-      <div id="today-checkins" class="checkin-list"></div>
-    </div>
-  </div>
+    <div class="cover-fields">
+      <div class="cover-field">
+        <div class="cover-field-label">姓　　名</div>
+        <div class="cover-field-line"></div>
+      </div>
+      <div class="cover-field">
+        <div class="cover-field-label">天賦特質</div>
+        <div class="cover-field-line"></div>
+      </div>
+      <div class="cover-field">
+        <div class="cover-field-label">介　紹　人</div>
+        <div class="cover-field-line"></div>
+      </div>
+      <div class="cover-field-dual">
+        <div class="cover-field-half">
+          <div class="cover-field-label">陪跑家長</div>
+          <div class="cover-field-line"></div>
+        </div>
+        <div class="cover-field-half">
+          <div class="cover-field-label">陪跑群</div>
+          <div class="cover-field-line"></div>
+        </div>
+      </div>
 
-  <div id="tab-purchase" style="display:none;" class="wrap">
-    <div class="form-section">
-      <div class="alert" id="purchase-alert"></div>
-      <div class="form-group">
-        <label>學員搜尋</label>
-        <input type="text" id="purchase-search" placeholder="輸入姓名或編號..." oninput="searchMemberForForm('purchase')" />
-        <div id="purchase-suggestions" style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-top:4px;overflow:hidden;display:none;"></div>
-      </div>
-      <div id="purchase-member-info" style="display:none;">
-        <div class="stat-row" style="grid-template-columns:1fr 1fr;">
-          <div class="stat-card"><div class="stat-label">目前點數</div><div class="stat-value" id="pu-points">-</div></div>
-          <div class="stat-card"><div class="stat-label">目前效期</div><div class="stat-value" style="font-size:14px;padding-top:4px;" id="pu-expiry">-</div></div>
+      <div class="cover-energy-section">
+        <div class="cover-energy-eyebrow">— 天 賦 能 量 分 布 —</div>
+        <div class="cover-energy-grid">
+          <div class="cover-energy-cell">
+            <div class="cover-energy-head"><span class="cover-energy-dot" style="background:#4FAE6F"></span><span class="cover-energy-name">發電</span></div>
+            <div class="cover-energy-value">　　　 %</div>
+          </div>
+          <div class="cover-energy-cell">
+            <div class="cover-energy-head"><span class="cover-energy-dot" style="background:#E67E2B"></span><span class="cover-energy-name">火焰</span></div>
+            <div class="cover-energy-value">　　　 %</div>
+          </div>
+          <div class="cover-energy-cell">
+            <div class="cover-energy-head"><span class="cover-energy-dot" style="background:#C9A961"></span><span class="cover-energy-name">節奏</span></div>
+            <div class="cover-energy-value">　　　 %</div>
+          </div>
+          <div class="cover-energy-cell">
+            <div class="cover-energy-head"><span class="cover-energy-dot" style="background:#707070"></span><span class="cover-energy-name">鋼鐵</span></div>
+            <div class="cover-energy-value">　　　 %</div>
+          </div>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>購買點數</label>
-          <select id="pu-package" onchange="updatePackage()">
-            <option value="10|1900|2">10點 — $1,900（2個月）</option>
-            <option value="20|3600|3">20點 — $3,600（3個月）</option>
-            <option value="30|4800|3">30點 — $4,800（3個月）</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>贈點（雙倍送/抽獎）</label>
-          <input type="number" id="pu-bonus" min="0" value="0" />
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>繳費金額</label>
-          <input type="text" id="pu-amount" />
-        </div>
-        <div class="form-group">
-          <label>繳費方式</label>
-          <select id="pu-payment">
-            <option>匯款</option>
-            <option>現場</option>
-            <option>iPassMoney</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>開通日期</label>
-          <input type="date" id="pu-date" />
-        </div>
-        <div class="form-group">
-          <label>效期（自動計算）</label>
-          <input type="text" id="pu-expiry-calc" readonly style="color:var(--color-text-secondary);" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>收款人員 / 匯款末五碼</label>
-        <input type="text" id="pu-staff" />
-      </div>
-      <div class="form-group">
-        <label>備註</label>
-        <input type="text" id="pu-note" placeholder="例：寄放櫃檯、學員帶走..." />
-      </div>
-      <div class="form-actions">
-        <button onclick="submitPurchase()">確認購課 →</button>
-        <button onclick="resetPurchase()" style="color:var(--color-text-secondary);">重設</button>
       </div>
     </div>
   </div>
 
-  <div id="tab-newmember" style="display:none;" class="wrap">
-    <div class="form-section">
-      <div class="alert" id="newmember-alert"></div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>姓名 *</label>
-          <input type="text" id="nm-name" placeholder="中文姓名" />
-        </div>
-        <div class="form-group">
-          <label>別名（英文名）</label>
-          <input type="text" id="nm-alias" />
-        </div>
+  <div class="cover-bottom">
+    <div class="cover-year">RICH MEMBERS CLUB · 輕 易 豐 盛 學 苑</div>
+  </div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<!-- ============================================
+     PAGE 1 · 歡迎信
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 01</div>
+    <h1 class="page-title">歡迎來到輕易豐盛學苑</h1>
+    <div class="page-title-en">A LETTER TO YOU</div>
+    <div class="gold-divider"></div>
+
+    <div class="welcome-letter">
+      <p class="salutation">給剛踏進 RICH 的你 ──</p>
+
+      <p>恭喜你做了一個決定 ── 把接下來的兩年,交給一個願意陪你走的地方。</p>
+
+      <p>我創辦輕易豐盛學苑的初心很單純:在這個世界,太多人用錯了力氣 ── 努力工作卻不快樂、賺到了錢卻心裡空、認識很多人卻沒有真的朋友。我想做一個地方,讓人可以慢慢找回自己,然後活出真正屬於自己的版本。</p>
+
+      <p>我們相信三件事 ── 找到你的<strong style="color:var(--gold-dark)">天賦</strong>、重建你的<strong style="color:var(--gold-dark)">財商</strong>、走進對的<strong style="color:var(--gold-dark)">人脈圈</strong>。這三件事少了任何一個,另外兩個都走不久。RICH 不是一堂課、不是一個證書、不是一個社團 ── 是一段陪伴,陪你重建這三件事的旅程。</p>
+
+      <p>接下來的兩年,你會遇到課程、會遇到老師、會遇到一群跟你一樣在路上的同學。我希望你能慢慢來、別急。重要的不是你「上了多少堂課」,而是兩年後,你看著鏡子裡的自己,能不能說一句:「我活得比兩年前更像我自己。」</p>
+
+      <p>這本手冊是給你前期的指引。它不會教你所有東西,但它會讓你知道 ── 該找誰、該做什麼、該往哪走。當你有任何卡住的地方,翻開它,通常都能找到答案。</p>
+
+      <p class="no-indent" style="margin-top: 8mm;">期待在 RICH 看見不一樣的你。</p>
+
+      <div class="signature">
+        <div>輕易豐盛學苑 創辦人</div>
+        <div class="signature-name">Jamie · 周一芯</div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>手機</label>
-          <input type="text" id="nm-phone" />
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="nm-email" />
-        </div>
+    </div>
+
+    <div class="core-values">
+      <div class="core-value">
+        <div class="core-value-icon">I</div>
+        <div class="core-value-name">陪伴</div>
+        <div class="core-value-desc">兩年的同行<br>不是一次性的買賣</div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>LINE ID</label>
-          <input type="text" id="nm-line" />
-        </div>
-        <div class="form-group">
-          <label>Instagram</label>
-          <input type="text" id="nm-ig" />
-        </div>
+      <div class="core-value">
+        <div class="core-value-icon">II</div>
+        <div class="core-value-name">真實</div>
+        <div class="core-value-desc">不販賣神話<br>只陪你走真實的路</div>
       </div>
-      <div class="form-group">
-        <label>入口課程</label>
-        <input type="text" id="nm-course" placeholder="例：週五抒情爵士" />
-      </div>
-      <div class="form-group">
-        <label>備註</label>
-        <textarea id="nm-note" rows="2" style="width:100%;resize:vertical;"></textarea>
-      </div>
-      <div class="form-actions">
-        <button onclick="submitNewMember()">新增學員 →</button>
-        <button onclick="resetNewMember()" style="color:var(--color-text-secondary);">重設</button>
-      </div>
-      <div style="margin-top:20px;font-size:12px;color:var(--color-text-secondary);">
-        學員編號將自動指派。新增後請記得到「購課登記」為學員開通課卡。
+      <div class="core-value">
+        <div class="core-value-icon">III</div>
+        <div class="core-value-name">圓滿</div>
+        <div class="core-value-desc">天賦 · 財商 · 人脈<br>三件事一起照顧</div>
       </div>
     </div>
   </div>
-</div>
-</div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">01 · WELCOME</div>
+  <div class="gold-bar-bottom"></div>
+</section>
 
-<script>
-const TODAY = new Date();
-const todayStr = TODAY.toISOString().split('T')[0];
-document.getElementById('today-date').textContent = TODAY.toLocaleDateString('zh-TW', {year:'numeric',month:'long',day:'numeric'});
+<!-- ============================================
+     PAGE 2 · 學習路徑地圖(取代原天賦頁 + 舊學習地圖)
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 02</div>
+    <h1 class="page-title">學習路徑地圖</h1>
+    <div class="page-title-en">YOUR GROWTH PATHWAYS</div>
+    <div class="gold-divider"></div>
 
-const MEMBERS_RAW = [
-  {id:'JZ0012',name:'潘玟君',alias:'',phone:'0936913561',email:'panwenchun@gmail.com',points:12,expiry:'2026/06/09'},
-  {id:'JZ0014',name:'芋頭',alias:'方韻茼',phone:'972313396',email:'f.btl@hotmail.com',points:22,expiry:'2026/07/07'},
-  {id:'JZ0015',name:'楊晴皓',alias:'',phone:'',email:'',points:26,expiry:'2026/06/16'},
-  {id:'JZ0016',name:'吳政彥',alias:'小彥',phone:'0912194293',email:'dlamyan@gmail.com',points:17,expiry:'2026/07/14'},
-  {id:'JZ0017',name:'朱湘芬',alias:'',phone:'',email:'',points:41,expiry:'2026/07/14'},
-  {id:'JZ0019',name:'賴冠穎',alias:'',phone:'',email:'jessicalailai@hotmail.com',points:1,expiry:'2026/06/09'},
-  {id:'JZ0021',name:'Sophie',alias:'江峯秀',phone:'0930002553',email:'hello.sophiejiang@gmail.com',points:24,expiry:'2026/07/18'},
-  {id:'JZ0022',name:'卓宛萱',alias:'',phone:'972774705',email:'cwhsuannnnn@gmail.com',points:21,expiry:'2026/06/14'},
-  {id:'JZ0023',name:'Eva',alias:'游季璇',phone:'',email:'',points:1,expiry:'2026/04/17'},
-  {id:'JZ0024',name:'謝佩憶',alias:'',phone:'939796567',email:'pearlyshieh@gmail.com',points:8,expiry:'2026/06/18'},
-  {id:'JZ0025',name:'Mandy',alias:'路雅如',phone:'',email:'roxylu0805@gmail.com',points:11,expiry:'2026/07/04'},
-  {id:'JZ0026',name:'林芃君',alias:'',phone:'',email:'',points:31,expiry:'2026/05/13'},
-  {id:'JZ0028',name:'runa',alias:'王俞茹',phone:'',email:'tomatolover86612@gmail.com',points:26,expiry:'2026/06/05'},
-  {id:'JZ0029',name:'Tim',alias:'蔡言悌',phone:'0931226463',email:'tim85613@gmail.com',points:28,expiry:'2026/06/05'},
-  {id:'JZ0031',name:'楊子柔',alias:'',phone:'983721815',email:'yangtzujou@gmail.com',points:4,expiry:'2026/03/23'},
-  {id:'JZ0032',name:'陳晏瑜',alias:'',phone:'',email:'',points:12,expiry:'2026/03/20'},
-  {id:'JZ0034',name:'陳以暄',alias:'',phone:'0909798925',email:'erin19231204@gmail.com',points:7,expiry:'2026/06/24'},
-  {id:'JZ0041',name:'郭信華',alias:'',phone:'920165990',email:'sophy2264kuo@gmail.com',points:24,expiry:'2026/06/22'},
-  {id:'JZ0042',name:'陳毅銘',alias:'',phone:'0921955323',email:'nomar9564@gmai.com',points:25,expiry:'2026/07/15'},
-  {id:'JZ0043',name:'曹貴玲',alias:'',phone:'0922396982',email:'carol@pepwood.com.tw',points:-3,expiry:'2026/05/09'},
-  {id:'JZ0044',name:'廖莉萍',alias:'',phone:'',email:'',points:5,expiry:'2026/05/08'},
-  {id:'JZ0045',name:'Lyndon',alias:'尉霖登',phone:'',email:'',points:28,expiry:'2026/07/20'},
-  {id:'JZ0046',name:'陳淑美',alias:'',phone:'0919209769',email:'jenny@greatwall-infotech.com.tw',points:15,expiry:'2026/04/14'},
-  {id:'JZ0047',name:'楊欣恩',alias:'',phone:'',email:'',points:5,expiry:'2026/05/02'},
-  {id:'JZ0048',name:'陳謙豪',alias:'',phone:'',email:'',points:0,expiry:'2026/04/08'},
-  {id:'JZ0051',name:'楊惟婷',alias:'',phone:'',email:'ericaaa191293@gmail.com',points:0,expiry:'2026/05/26'},
-  {id:'JZ0053',name:'吳姿穎',alias:'',phone:'',email:'ninawu.up@gmail.com',points:14,expiry:'2026/04/19'},
-  {id:'JZ0054',name:'李淑儀',alias:'',phone:'',email:'alison0068@gmail.com',points:16,expiry:'2026/06/23'},
-  {id:'JZ0055',name:'陳奕璇',alias:'',phone:'',email:'ashleychensd@gmail.com',points:2,expiry:'2026/03/14'},
-  {id:'JZ0056',name:'王暄竹',alias:'',phone:'0988273343',email:'sheryl31@gmail.com',points:12,expiry:'2026/06/11'},
-  {id:'JZ0057',name:'賀雲',alias:'',phone:'0903559616',email:'smile20512@gmail.com',points:34,expiry:'2026/04/23'},
-  {id:'JZ0060',name:'Naomi',alias:'鄒文君',phone:'',email:'',points:9,expiry:'2026/05/25'},
-  {id:'JZ0061',name:'黃騰輝',alias:'',phone:'',email:'',points:18,expiry:'2026/06/14'},
-  {id:'JZ0063',name:'申任廷',alias:'',phone:'930700381',email:'',points:0,expiry:'2026/04/17'},
-  {id:'JZ0064',name:'Hank',alias:'沈毓涵',phone:'952676031',email:'',points:24,expiry:'2026/07/12'},
-  {id:'JZ0065',name:'林軒弘',alias:'',phone:'',email:'',points:8,expiry:'2026/03/20'},
-  {id:'JZ0066',name:'汪穎瑩',alias:'',phone:'',email:'',points:4,expiry:'2026/03/23'},
-  {id:'JZ0067',name:'洪廣芝',alias:'',phone:'0978850731',email:'minniehkc40312@gmail.com',points:9,expiry:'2026/05/23'},
-  {id:'JZ0069',name:'王瑞芬',alias:'',phone:'0933123198',email:'',points:6,expiry:'2026/06/24'},
-  {id:'JZ0070',name:'李敏慈',alias:'',phone:'',email:'michellelee8215@gmail.com',points:1,expiry:'2026/04/18'},
-  {id:'JZ0071',name:'孫宇寧',alias:'',phone:'0968505296',email:'sunyuning1211@gmail.com',points:9,expiry:'2026/06/15'},
-  {id:'JZ0073',name:'黃意函',alias:'',phone:'',email:'',points:23,expiry:'2026/07/23'},
-  {id:'JZ0074',name:'蔣宏宇',alias:'',phone:'917123512',email:'',points:14,expiry:'2026/06/08'},
-  {id:'JZ0075',name:'賴彥君',alias:'',phone:'',email:'',points:4,expiry:'2026/05/07'},
-  {id:'JZ0076',name:'胡如樺',alias:'',phone:'',email:'',points:9,expiry:'2026/06/23'},
-  {id:'JZ0077',name:'蕭舜文',alias:'',phone:'',email:'',points:7,expiry:'2026/05/16'},
-  {id:'JZ0078',name:'李采霓',alias:'',phone:'934263493',email:'',points:9,expiry:'2026/06/23'},
-  {id:'JZ0079',name:'馬岍婷',alias:'',phone:'0912812770',email:'sseelleess@gmail.com',points:14,expiry:'2026/06/05'},
-  {id:'JZ0080',name:'杜孟儒',alias:'',phone:'',email:'',points:28,expiry:'2026/06/05'},
-  {id:'JZ0081',name:'何翊禎',alias:'',phone:'916134133',email:'',points:7,expiry:'2026/05/21'},
-  {id:'JZ0082',name:'邱子芸',alias:'',phone:'968674319',email:'',points:8,expiry:'2026/06/13'},
-  {id:'JZ0083',name:'陳彥樺',alias:'Allyson',phone:'972011676',email:'',points:21,expiry:'2026/07/23'},
-  {id:'JZ0084',name:'Ashley',alias:'高維璘',phone:'910601325',email:'',points:24,expiry:'2026/07/04'},
-  {id:'JZ0086',name:'鄧丞恩',alias:'',phone:'938799912',email:'andyteng0309@hotmail.com.tw',points:24,expiry:'2026/07/07'},
-];
+    <p class="paths-intro">
+      四條路徑 · 對應你人生不同的需求<br>
+      <strong>不必每條都走 · 但每一條都有人陪你</strong>
+    </p>
 
-let members = JSON.parse(JSON.stringify(MEMBERS_RAW));
-let checkinLog = [];
-let selectedMemberId = null;
-let selectedTab = 'members';
+    <div class="paths-container">
 
-function getStatus(m) {
-  if (!m.expiry) return 'nocard';
-  const exp = new Date(m.expiry.replace(/\//g, '-'));
-  const diff = (exp - TODAY) / 86400000;
-  if (m.points <= 0) return 'nopoints';
-  if (diff < 0) return 'expired';
-  if (diff <= 7) return 'warning';
-  return 'ok';
-}
-
-function statusBadge(st) {
-  if (st === 'ok') return '<span class="badge badge-ok">有效</span>';
-  if (st === 'warning') return '<span class="badge badge-warn">即將到期</span>';
-  if (st === 'expired') return '<span class="badge badge-danger">已過期</span>';
-  if (st === 'nopoints') return '<span class="badge badge-danger">點數用完</span>';
-  return '<span class="badge">無課卡</span>';
-}
-
-function renderMembers() {
-  const q = document.getElementById('member-search').value.toLowerCase();
-  const filter = document.getElementById('filter-status').value;
-  let list = members.filter(m => {
-    const match = !q || m.name.includes(q) || m.id.toLowerCase().includes(q) || (m.alias && m.alias.includes(q));
-    const st = getStatus(m);
-    const fmatch = filter === 'all' || filter === st || (filter === 'active' && st === 'ok');
-    return match && fmatch;
-  });
-  document.getElementById('member-count').textContent = `共 ${list.length} 位學員`;
-  const grid = document.getElementById('member-grid');
-  if (!list.length) { grid.innerHTML = '<div class="empty">找不到符合的學員</div>'; return; }
-  grid.innerHTML = list.map(m => {
-    const st = getStatus(m);
-    const cardClass = st === 'warning' ? 'warning' : st === 'expired' || st === 'nopoints' ? 'expired' : 'ok';
-    const expClass = st === 'warning' ? 'soon' : (st === 'expired' ? 'expired' : '');
-    const initials = (m.name || '?').slice(0,2);
-    return `<div class="member-card ${cardClass}" onclick="showDetail('${m.id}')">
-      <div class="card-header">
-        <div class="avatar">${initials}</div>
-        <div><div class="member-name">${m.name}${m.alias ? ` <span style="font-weight:400;color:var(--color-text-secondary);font-size:12px;">${m.alias}</span>` : ''}</div>
-        <div class="member-id">${m.id}${m.phone ? ' · ' + m.phone : ''}</div></div>
-      </div>
-      <div class="points-row">
-        <div><div class="points-big">${m.points}</div><div class="points-label">現有點數</div></div>
-        <div style="text-align:right">
-          ${statusBadge(st)}
-          <div class="expiry ${expClass}" style="margin-top:4px;">${m.expiry ? '效期 ' + m.expiry : '—'}</div>
+      <!-- 天賦 -->
+      <div class="path-row talent">
+        <div class="path-label">
+          <div class="path-pillar">天 賦</div>
+          <div class="path-pillar-en">PILLAR I · TALENT</div>
+        </div>
+        <div class="path-stations">
+          <div class="path-station">
+            <div class="path-stage">入　門</div>
+            <div class="path-circle">I</div>
+            <div class="path-course">天賦順流實戰班</div>
+            <div class="path-tag">知道自己是誰</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">進　階</div>
+            <div class="path-circle">II</div>
+            <div class="path-course">天賦大師班</div>
+            <div class="path-tag">知道怎麼用</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">深　化</div>
+            <div class="path-circle">III</div>
+            <div class="path-course">超影響力班</div>
+            <div class="path-tag">把天賦放大</div>
+          </div>
         </div>
       </div>
-    </div>`;
-  }).join('');
-}
 
-function showDetail(id) {
-  const m = members.find(x => x.id === id);
-  if (!m) return;
-  const st = getStatus(m);
-  const log = checkinLog.filter(x => x.memberId === id);
-  document.getElementById('detail-overlay').style.display = 'block';
-  document.getElementById('detail-content').innerHTML = `
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-      <div class="avatar" style="width:48px;height:48px;font-size:16px;">${m.name.slice(0,2)}</div>
-      <div><div style="font-size:18px;font-weight:500;">${m.name}${m.alias ? ` (${m.alias})` : ''}</div>
-      <div style="font-size:13px;color:var(--color-text-secondary);">${m.id}${m.phone ? ' · ' + m.phone : ''}${m.email ? ' · ' + m.email : ''}</div></div>
-      ${statusBadge(st)}
+      <!-- 財商 -->
+      <div class="path-row wealth">
+        <div class="path-label">
+          <div class="path-pillar">財 商</div>
+          <div class="path-pillar-en">PILLAR II · WEALTH</div>
+        </div>
+        <div class="path-stations">
+          <div class="path-station">
+            <div class="path-stage">基　礎</div>
+            <div class="path-circle">I</div>
+            <div class="path-course">財富翻倍藍圖</div>
+            <div class="path-tag">先把錢看懂</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">深　化</div>
+            <div class="path-circle">II</div>
+            <div class="path-course">財富揚升方程式</div>
+            <div class="path-tag">讓錢開始跑</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">配　套</div>
+            <div class="path-circle">III</div>
+            <div class="path-course">景氣循環投資術</div>
+            <div class="path-tag">看懂時機點</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 人脈 -->
+      <div class="path-row network">
+        <div class="path-label">
+          <div class="path-pillar">人 脈</div>
+          <div class="path-pillar-en">PILLAR III · NETWORK</div>
+        </div>
+        <div class="path-stations">
+          <div class="path-station">
+            <div class="path-stage">季　度</div>
+            <div class="path-circle">I</div>
+            <div class="path-course">人脈資源整合</div>
+            <div class="path-tag">一季一次</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">年　度</div>
+            <div class="path-circle">II</div>
+            <div class="path-course">春之旅</div>
+            <div class="path-tag">年度盛會</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">在　地</div>
+            <div class="path-circle">III</div>
+            <div class="path-course">各地區聚會</div>
+            <div class="path-tag">北中南不定期</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 觀念 -->
+      <div class="path-row insight">
+        <div class="path-label">
+          <div class="path-pillar">觀 念</div>
+          <div class="path-pillar-en">PILLAR IV · INSIGHT</div>
+        </div>
+        <div class="path-stations modular">
+          <div class="path-station">
+            <div class="path-stage">思　維</div>
+            <div class="path-circle">I</div>
+            <div class="path-course">人生解憂</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">工　作</div>
+            <div class="path-circle">II</div>
+            <div class="path-course">職場系列</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">債　務</div>
+            <div class="path-circle">III</div>
+            <div class="path-course">理債系列</div>
+          </div>
+          <div class="path-station">
+            <div class="path-stage">收　入</div>
+            <div class="path-circle">IV</div>
+            <div class="path-course">主被動收入</div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="stat-row">
-      <div class="stat-card"><div class="stat-label">現有點數</div><div class="stat-value">${m.points}</div></div>
-      <div class="stat-card"><div class="stat-label">點數效期</div><div class="stat-value" style="font-size:14px;padding-top:4px;">${m.expiry || '—'}</div></div>
-      <div class="stat-card"><div class="stat-label">本session紀錄</div><div class="stat-value">${log.length} 筆</div></div>
+
+    <p class="paths-footnote">課程順序為建議路徑 · 不是強制 · 由你的陪跑家長協助規劃節奏</p>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">02 · PATHWAYS</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<!-- ============================================
+     PAGE 3 · 年度課程頻率概覽(直式 A4 · v7 muted 版)
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 03</div>
+    <h1 class="page-title">年度課程頻率概覽</h1>
+    <div class="page-title-en">YEAR AT A GLANCE</div>
+    <div class="gold-divider"></div>
+
+    <div class="annual-portrait merged">
+      <!-- Header row -->
+      <div class="ap-corner"></div>
+      <div class="ap-lane-header">
+        <div class="ap-lane-icon">I</div>
+        <div class="ap-lane-name">天賦順流<br>實戰班</div>
+      </div>
+      <div class="ap-lane-header">
+        <div class="ap-lane-icon">II</div>
+        <div class="ap-lane-name">季節大課<br>· 年度焦點 ·</div>
+      </div>
+      <div class="ap-lane-header">
+        <div class="ap-lane-icon">III</div>
+        <div class="ap-lane-name">100天<br>影響力班</div>
+      </div>
+      <div class="ap-lane-header">
+        <div class="ap-lane-icon">IV</div>
+        <div class="ap-lane-name">人生解憂</div>
+      </div>
+      <div class="ap-month" style="grid-row:2">
+        <span class="ap-m-num">1月</span>
+        <span class="ap-m-en">JAN</span>
+      </div>
+      <div class="ap-month" style="grid-row:3">
+        <span class="ap-m-num">2月</span>
+        <span class="ap-m-en">FEB</span>
+      </div>
+      <div class="ap-month" style="grid-row:4">
+        <span class="ap-m-num">3月</span>
+        <span class="ap-m-en">MAR</span>
+      </div>
+      <div class="ap-month" style="grid-row:5">
+        <span class="ap-m-num">4月</span>
+        <span class="ap-m-en">APR</span>
+      </div>
+      <div class="ap-month" style="grid-row:6">
+        <span class="ap-m-num">5月</span>
+        <span class="ap-m-en">MAY</span>
+      </div>
+      <div class="ap-month" style="grid-row:7">
+        <span class="ap-m-num">6月</span>
+        <span class="ap-m-en">JUN</span>
+      </div>
+      <div class="ap-month" style="grid-row:8">
+        <span class="ap-m-num">7月</span>
+        <span class="ap-m-en">JUL</span>
+      </div>
+      <div class="ap-month" style="grid-row:9">
+        <span class="ap-m-num">8月</span>
+        <span class="ap-m-en">AUG</span>
+      </div>
+      <div class="ap-month" style="grid-row:10">
+        <span class="ap-m-num">9月</span>
+        <span class="ap-m-en">SEP</span>
+      </div>
+      <div class="ap-month" style="grid-row:11">
+        <span class="ap-m-num">10月</span>
+        <span class="ap-m-en">OCT</span>
+      </div>
+      <div class="ap-month" style="grid-row:12">
+        <span class="ap-m-num">11月</span>
+        <span class="ap-m-en">NOV</span>
+      </div>
+      <div class="ap-month" style="grid-row:13">
+        <span class="ap-m-num">12月</span>
+        <span class="ap-m-en">DEC</span>
+      </div>
+      <div class="ap-event muted" style="grid-column:2; grid-row:2">
+        <div class="ap-tag">第 87 期</div>
+        <div class="ap-name">實戰班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:2; grid-row:3"></div>
+      <div class="ap-event muted" style="grid-column:2; grid-row:4">
+        <div class="ap-tag">第 88 期</div>
+        <div class="ap-name">實戰班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:2; grid-row:5"></div>
+      <div class="ap-event muted" style="grid-column:2; grid-row:6">
+        <div class="ap-tag">第 89 期</div>
+        <div class="ap-name">實戰班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:2; grid-row:7"></div>
+      <div class="ap-event muted" style="grid-column:2; grid-row:8">
+        <div class="ap-tag">第 90 期</div>
+        <div class="ap-name">實戰班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:2; grid-row:9"></div>
+      <div class="ap-event muted" style="grid-column:2; grid-row:10">
+        <div class="ap-tag">第 91 期</div>
+        <div class="ap-name">實戰班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:2; grid-row:11"></div>
+      <div class="ap-event muted" style="grid-column:2; grid-row:12">
+        <div class="ap-tag">第 92 期</div>
+        <div class="ap-name">實戰班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:2; grid-row:13"></div>
+      <div class="ap-event muted" style="grid-column:3; grid-row:2/span 3">
+        <div class="ap-tag">1-3月</div>
+        <div class="ap-name">新春開運系列</div>
+      </div>
+      <div class="ap-event muted" style="grid-column:3; grid-row:5/span 3">
+        <div class="ap-tag">Q2 重點</div>
+        <div class="ap-name">財富翻倍藍圖</div>
+        <div class="ap-focus-overlay" style="background:linear-gradient(135deg,#C45252,#8E2A2A)">
+          <span class="ofo-icon">⚑</span>
+          <span class="ofo-text">5月 · Rich 春之旅</span>
+        </div>
+      </div>
+      <div class="ap-event muted" style="grid-column:3; grid-row:9/span 3">
+        <div class="ap-tag">Q3 重點</div>
+        <div class="ap-name">天賦大師<br>系列課</div>
+      </div>
+      <div class="ap-focus-block" style="grid-column:3; grid-row:8; background:linear-gradient(135deg,#E89F45,#B8702A)">
+        <div class="ap-focus-circle-inline">✦</div>
+        <div class="ap-focus-text">
+          <strong>天賦狂歡節</strong>
+          <span>Jamie 生日 + 大師班</span>
+        </div>
+      </div>
+      <div class="ap-focus-block" style="grid-column:3; grid-row:12; background:linear-gradient(135deg,#5DA5C0,#3582A0)">
+        <div class="ap-focus-circle-inline">⚓</div>
+        <div class="ap-focus-text">
+          <strong>豪華郵輪</strong>
+          <span>11月初</span>
+        </div>
+      </div>
+      <div class="ap-empty" style="grid-column:3; grid-row:13"></div>
+      <div class="ap-event muted" style="grid-column:4; grid-row:4/span 3">
+        <div class="ap-tag">3-5月 · 第一梯</div>
+        <div class="ap-name">影響力班</div>
+      </div>
+      <div class="ap-event muted" style="grid-column:4; grid-row:8/span 3">
+        <div class="ap-tag">7-9月 · 第二梯</div>
+        <div class="ap-name">影響力班</div>
+      </div>
+      <div class="ap-event muted" style="grid-column:4; grid-row:12/span 2">
+        <div class="ap-tag">11月-翌1月 · 第三梯</div>
+        <div class="ap-name">影響力班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:4; grid-row:2"></div>
+      <div class="ap-empty" style="grid-column:4; grid-row:3"></div>
+      <div class="ap-empty" style="grid-column:4; grid-row:7"></div>
+      <div class="ap-empty" style="grid-column:4; grid-row:11"></div>
+      <div class="ap-empty" style="grid-column:5; grid-row:2"></div>
+      <div class="ap-empty" style="grid-column:5; grid-row:3"></div>
+      <div class="ap-empty" style="grid-column:5; grid-row:4"></div>
+      <div class="ap-event muted" style="grid-column:5; grid-row:5">
+        <div class="ap-tag">4 月</div>
+        <div class="ap-name">解憂班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:5; grid-row:6"></div>
+      <div class="ap-empty" style="grid-column:5; grid-row:7"></div>
+      <div class="ap-empty" style="grid-column:5; grid-row:8"></div>
+      <div class="ap-event muted" style="grid-column:5; grid-row:9">
+        <div class="ap-tag">8 月</div>
+        <div class="ap-name">解憂班</div>
+      </div>
+      <div class="ap-empty" style="grid-column:5; grid-row:10"></div>
+      <div class="ap-empty" style="grid-column:5; grid-row:11"></div>
+      <div class="ap-empty" style="grid-column:5; grid-row:12"></div>
+      <div class="ap-event muted" style="grid-column:5; grid-row:13">
+        <div class="ap-tag">12 月</div>
+        <div class="ap-name">解憂班</div>
+      </div>
     </div>
-    ${log.length ? `<div class="section-title">本session出席記錄</div>
-    <table class="history-table"><thead><tr><th>日期</th><th>出席</th><th>點數</th><th>課程</th></tr></thead>
-    <tbody>${log.map(r => `<tr><td>${r.date}</td><td>${r.attendance}</td><td class="deduct">-${r.points}</td><td style="max-width:200px;word-break:break-word;">${r.course || '—'}</td></tr>`).join('')}</tbody></table>` : ''}
-  `;
-}
 
-function closeDetail() {
-  document.getElementById('detail-overlay').style.display = 'none';
-}
+    <div class="ap-legend">
+      <div class="ap-legend-item">
+        <span class="ap-legend-pill muted-pill"></span>
+        例行課程
+      </div>
+      <div class="ap-legend-item">
+        <span class="ap-legend-pill" style="background:linear-gradient(135deg,#C45252,#8E2A2A)"></span>
+        年度焦點 · 春之旅 / 天賦狂歡節 / 豪華郵輪
+      </div>
+    </div>
 
-function showTab(tab) {
-  ['members','checkin','purchase','newmember'].forEach(t => {
-    document.getElementById('tab-'+t).style.display = t === tab ? '' : 'none';
-  });
-  document.querySelectorAll('.tab').forEach((el,i) => {
-    el.classList.toggle('active', ['members','checkin','purchase','newmember'][i] === tab);
-  });
-  selectedTab = tab;
-  if (tab === 'checkin') {
-    document.getElementById('ci-date').value = todayStr;
-    renderTodayCheckins();
-  }
-  if (tab === 'purchase') {
-    document.getElementById('pu-date').value = todayStr;
-    updatePackage();
-  }
-}
+    <p class="ap-footnote">課程內容與時程依當年公告為準 · 一年三個年度大事是不可錯過的重點</p>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">03 · ANNUAL CHART</div>
+  <div class="gold-bar-bottom"></div>
+</section>
 
-function searchMemberForForm(type) {
-  const q = document.getElementById(type+'-search').value.toLowerCase();
-  const sugDiv = document.getElementById(type+'-suggestions');
-  if (!q) { sugDiv.style.display = 'none'; return; }
-  const matches = members.filter(m => m.name.includes(q) || m.id.toLowerCase().includes(q) || (m.alias && m.alias.includes(q))).slice(0,5);
-  if (!matches.length) { sugDiv.style.display = 'none'; return; }
-  sugDiv.style.display = 'block';
-  sugDiv.innerHTML = matches.map(m => `<div onclick="selectMember('${m.id}','${type}')" style="padding:10px 12px;cursor:pointer;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;" onmouseover="this.style.background='var(--color-background-secondary)'" onmouseout="this.style.background=''">
-    <div><span style="font-weight:500">${m.name}</span>${m.alias ? ' <span style="color:var(--color-text-secondary);font-size:12px;">'+m.alias+'</span>' : ''} <span style="font-size:12px;color:var(--color-text-tertiary);">${m.id}</span></div>
-    <div style="font-size:13px;font-weight:500;">${m.points}點 <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary);">${m.expiry || ''}</span></div>
-  </div>`).join('');
-}
+<!-- ============================================
+     PAGE 4 · 五步驟
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 04</div>
+    <h1 class="page-title">新人上手五步驟</h1>
+    <div class="page-title-en">FIRST FIVE STEPS · IN THIS ORDER</div>
+    <div class="gold-divider"></div>
 
-function selectMember(id, type) {
-  const m = members.find(x => x.id === id);
-  selectedMemberId = id;
-  document.getElementById(type+'-search').value = `${m.name} (${m.id})`;
-  document.getElementById(type+'-suggestions').style.display = 'none';
-  
-  if (type === 'checkin') {
-    const st = getStatus(m);
-    document.getElementById('checkin-member-info').style.display = 'block';
-    document.getElementById('ci-points').textContent = m.points;
-    document.getElementById('ci-expiry').textContent = m.expiry || '—';
-    document.getElementById('ci-status').innerHTML = statusBadge(st);
-  }
-  if (type === 'purchase') {
-    document.getElementById('purchase-member-info').style.display = 'block';
-    document.getElementById('pu-points').textContent = m.points;
-    document.getElementById('pu-expiry').textContent = m.expiry || '—';
-  }
-}
+    <p class="step-intro">請依照順序完成 · 每完成一步,請在右側打勾</p>
 
-function showAlert(id, msg, type) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.className = 'alert ' + type;
-  el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 3500);
-}
+    <ol class="step-list">
+      <li class="step-item">
+        <div class="step-number">I</div>
+        <div class="step-body">
+          <div class="step-header">
+            <div class="step-title">看完 RICH 介紹影片</div>
+            <div class="step-checkbox">完成 <span class="step-checkbox-box"></span></div>
+          </div>
+          <div class="step-desc">先建立對學苑的整體認識 ── 知道我們是誰、提供什麼、運作方式。後續所有的事都會在這個地基上長出來。</div>
+          <div class="step-tip">影片連結 · 請見 P9 QR 碼區「線上平台教學」</div>
+        </div>
+      </li>
 
-function submitCheckin() {
-  if (!selectedMemberId) { showAlert('checkin-alert','請先選擇學員','error'); return; }
-  const m = members.find(x => x.id === selectedMemberId);
-  const pts = parseInt(document.getElementById('ci-deduct').value) || 0;
-  const attendance = document.getElementById('ci-attendance').value;
-  const course = document.getElementById('ci-course').value;
-  const date = document.getElementById('ci-date').value || todayStr;
-  
-  m.points -= pts;
-  document.getElementById('ci-points').textContent = m.points;
-  
-  const log = { memberId: m.id, memberName: m.name, points: pts, attendance, course, date, staff: document.getElementById('ci-staff').value };
-  checkinLog.push(log);
-  
-  showAlert('checkin-alert', `已為 ${m.name} 扣除 ${pts} 點，剩餘 ${m.points} 點`, 'success');
-  renderTodayCheckins();
-  renderMembers();
-  document.getElementById('ci-course').value = '';
-  document.getElementById('ci-staff').value = '';
-}
+      <li class="step-item">
+        <div class="step-number">II</div>
+        <div class="step-body">
+          <div class="step-header">
+            <div class="step-title">加 LINE 工作家人 · 完成自我介紹</div>
+            <div class="step-checkbox">完成 <span class="step-checkbox-box"></span></div>
+          </div>
+          <div class="step-desc">私訊助理你的基本訊息(姓名、產業、加入動機),助理會把你拉進對應的陪跑群。<strong>有人接住你 · 後面才能放心問問題</strong>。</div>
+          <div class="step-tip">需聯絡:Jamie 老師 · Ray · 士鳴 · 助理(請向介紹人索取聯絡方式)</div>
+        </div>
+      </li>
 
-function resetCheckin() {
-  selectedMemberId = null;
-  document.getElementById('checkin-search').value = '';
-  document.getElementById('checkin-member-info').style.display = 'none';
-}
+      <li class="step-item">
+        <div class="step-number">III</div>
+        <div class="step-body">
+          <div class="step-header">
+            <div class="step-title">線上學習平台開通</div>
+            <div class="step-checkbox">完成 <span class="step-checkbox-box"></span></div>
+          </div>
+          <div class="step-desc">註冊個人帳號、登入測試、確認可以正常觀看 500+ 線上課程。有任何技術問題請直接找助理。</div>
+          <div class="step-tip">教學連結 · 請見 P9 QR 碼區「線上平台教學」</div>
+        </div>
+      </li>
 
-function renderTodayCheckins() {
-  const today = document.getElementById('ci-date').value || todayStr;
-  const list = checkinLog.filter(r => r.date === today);
-  const el = document.getElementById('today-checkins');
-  if (!list.length) { el.innerHTML = '<div style="font-size:13px;color:var(--color-text-secondary);">尚無記錄</div>'; return; }
-  el.innerHTML = list.map(r => `<div class="checkin-item">
-    <div><div class="checkin-name">${r.memberName} <span class="tag">${r.memberId}</span></div>
-    <div class="checkin-points">${r.attendance} · ${r.course || '未填課程'}</div></div>
-    <div class="deduct" style="font-weight:500;">-${r.points}點</div>
-  </div>`).join('');
-}
+      <li class="step-item">
+        <div class="step-number">IV</div>
+        <div class="step-body">
+          <div class="step-header">
+            <div class="step-title">完成天賦測驗 · 閱讀 19 頁報告書</div>
+            <div class="step-checkbox">完成 <span class="step-checkbox-box"></span></div>
+          </div>
+          <div class="step-desc">完成 Wealth Dynamics 天賦測驗,填回封面的四能量比例,並把 19 頁報告書讀完(可以分兩三天)。</div>
+          <div class="step-tip">讀完之後 · 請主動跟你的陪跑家長預約 30 分鐘,把報告聊一次 ── 這一步很關鍵,自己讀通常會卡。</div>
+        </div>
+      </li>
 
-function updatePackage() {
-  const val = document.getElementById('pu-package').value.split('|');
-  document.getElementById('pu-amount').value = val[1];
-  const startDate = document.getElementById('pu-date').value || todayStr;
-  const exp = new Date(startDate);
-  exp.setMonth(exp.getMonth() + parseInt(val[2]));
-  document.getElementById('pu-expiry-calc').value = exp.toLocaleDateString('zh-TW').replace(/\//g, '/');
-}
+      <li class="step-item">
+        <div class="step-number">V</div>
+        <div class="step-body">
+          <div class="step-header">
+            <div class="step-title">報名最近一場「天賦順流實戰班」</div>
+            <div class="step-checkbox">完成 <span class="step-checkbox-box"></span></div>
+          </div>
+          <div class="step-desc">這是所有新人的起點課,把報告書的內容變成可操作的實戰工具。每 1.5 個月開一次,請勿等到「準備好」 ── 越早上,越早受益。</div>
+          <div class="step-tip">課表 QR · 請見 P9</div>
+        </div>
+      </li>
+    </ol>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">04 · FIRST STEPS</div>
+  <div class="gold-bar-bottom"></div>
+</section>
 
-document.getElementById('pu-date').addEventListener('change', updatePackage);
+<!-- ============================================
+     PAGE 6 · 求助對應表
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 05</div>
+    <h1 class="page-title">遇到問題 · 該找誰</h1>
+    <div class="page-title-en">WHO TO ASK · A QUICK GUIDE</div>
+    <div class="gold-divider"></div>
 
-function submitPurchase() {
-  if (!selectedMemberId) { showAlert('purchase-alert','請先選擇學員','error'); return; }
-  const m = members.find(x => x.id === selectedMemberId);
-  const val = document.getElementById('pu-package').value.split('|');
-  const bonus = parseInt(document.getElementById('pu-bonus').value) || 0;
-  const newPts = parseInt(val[0]) + bonus;
-  const expStr = document.getElementById('pu-expiry-calc').value;
-  
-  m.points += newPts;
-  m.expiry = expStr;
-  
-  document.getElementById('pu-points').textContent = m.points;
-  document.getElementById('pu-expiry').textContent = m.expiry;
-  
-  showAlert('purchase-alert', `已為 ${m.name} 新增 ${newPts} 點（含贈點${bonus}），效期至 ${expStr}`, 'success');
-  renderMembers();
-}
+    <div class="help-grid">
+      <div class="help-card">
+        <div class="help-when">WHEN YOU NEED</div>
+        <div class="help-topic">課程內容 · 觀念問題</div>
+        <div class="help-arrow">↓</div>
+        <div class="help-who">陪跑家長</div>
+        <div class="help-note">「這堂課怎麼套用」<br>「我天賦測出來這樣 · 該怎麼走」</div>
+      </div>
 
-function resetPurchase() {
-  selectedMemberId = null;
-  document.getElementById('purchase-search').value = '';
-  document.getElementById('purchase-member-info').style.display = 'none';
-}
+      <div class="help-card">
+        <div class="help-when">WHEN YOU NEED</div>
+        <div class="help-topic">報名 · 帳務 · 平台</div>
+        <div class="help-arrow">↓</div>
+        <div class="help-who">助　理</div>
+        <div class="help-note">「我怎麼登入平台」<br>「這個課怎麼報名」<br>「我的會員資料」</div>
+      </div>
 
-function submitNewMember() {
-  const name = document.getElementById('nm-name').value.trim();
-  if (!name) { showAlert('newmember-alert','姓名為必填','error'); return; }
-  
-  const existingIds = members.map(m => parseInt(m.id.replace('JZ',''))).filter(Boolean);
-  const nextNum = Math.max(...existingIds) + 1;
-  const newId = 'JZ' + String(nextNum).padStart(4,'0');
-  
-  const newM = {
-    id: newId,
-    name,
-    alias: document.getElementById('nm-alias').value,
-    phone: document.getElementById('nm-phone').value,
-    email: document.getElementById('nm-email').value,
-    points: 0,
-    expiry: ''
-  };
-  members.unshift(newM);
-  
-  showAlert('newmember-alert', `已新增學員 ${name}，學員編號：${newId}`, 'success');
-  resetNewMember();
-  renderMembers();
-}
+      <div class="help-card">
+        <div class="help-when">WHEN YOU NEED</div>
+        <div class="help-topic">群組規則 · 社群協調</div>
+        <div class="help-arrow">↓</div>
+        <div class="help-who">陪跑群長</div>
+        <div class="help-note">「這個訊息可以發嗎」<br>「我想辦小聚」</div>
+      </div>
 
-function resetNewMember() {
-  ['nm-name','nm-alias','nm-phone','nm-email','nm-line','nm-ig','nm-course','nm-note'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-}
+      <div class="help-card">
+        <div class="help-when">WHEN YOU NEED</div>
+        <div class="help-topic">重大人生決策</div>
+        <div class="help-arrow">↓</div>
+        <div class="help-who">Jamie 老師</div>
+        <div class="help-note">透過陪跑家長預約 · 限季度諮詢時段<br><em>請尊重老師的時間</em></div>
+      </div>
+    </div>
 
-renderMembers();
-updatePackage();
-document.getElementById('ci-date').value = todayStr;
-</script>
+    <div class="help-bottom">
+      <strong>不確定該找誰時 · 永遠先找助理。</strong><br>
+      助理會幫你判斷,並幫你找到對的那個人 ── 不用怕問錯。
+    </div>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">05 · WHO TO ASK</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<!-- ============================================
+     PAGE 7 · 我們的共識
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 06</div>
+    <h1 class="page-title">我們的共識</h1>
+    <div class="page-title-en">HOW WE WALK TOGETHER</div>
+    <div class="gold-divider"></div>
+
+    <p class="step-intro">這不是規定 · 是讓社群長久走下去的默契</p>
+
+    <ul class="agreement-list">
+      <li class="agreement-item">
+        <div class="agreement-mark">i</div>
+        <div class="agreement-body">
+          <div class="agreement-title">課程內容 · 群組訊息 · 學員故事 · 不外流</div>
+          <div class="agreement-desc">RICH 是一個信任的圈子。為了讓所有人能放心分享真實的脆弱與突破,所有內容請勿截圖外傳、轉貼到外部群組、或發布到社群媒體。違反者會請出社群。</div>
+        </div>
+      </li>
+
+      <li class="agreement-item">
+        <div class="agreement-mark">ii</div>
+        <div class="agreement-body">
+          <div class="agreement-title">想推薦自己的事業 · 請先報備</div>
+          <div class="agreement-desc">RICH 不禁止學員之間的合作或事業推薦,但請先告知你的陪跑家長與群長,確認方式與時機。直接在大群推銷會讓社群氣氛走味,也會傷害你的長期信任。</div>
+        </div>
+      </li>
+
+      <li class="agreement-item">
+        <div class="agreement-mark">iii</div>
+        <div class="agreement-body">
+          <div class="agreement-title">深度諮詢 · 走 1on1 · 不在大群展開</div>
+          <div class="agreement-desc">如果你的問題需要長篇討論、有個人隱私、或牽涉具體的人生決策,請預約 1on1。在大群提問請保持簡潔。這樣大家都能在群裡看到有用的資訊,不會被洗版。</div>
+        </div>
+      </li>
+
+      <li class="agreement-item">
+        <div class="agreement-mark">iv</div>
+        <div class="agreement-body">
+          <div class="agreement-title">慶祝 · 感謝 · 進展 · 歡迎多發</div>
+          <div class="agreement-desc">考完試、加薪、還清債務、突破關係 ── 不管大小,都歡迎在群裡分享。這些訊號是社群最重要的養分,也是讓新進學員看見「我也可以」的最強證據。</div>
+        </div>
+      </li>
+
+      <li class="agreement-item">
+        <div class="agreement-mark">v</div>
+        <div class="agreement-body">
+          <div class="agreement-title">遇到誰讓你不舒服 · 請告訴我們</div>
+          <div class="agreement-desc">社群有 2,000+ 活躍會員,難免遇到合不來、或讓你不舒服的人。不需要忍耐 ── 直接告訴你的陪跑家長或群長,我們會處理。RICH 不容忍任何形式的騷擾、霸凌、或情緒勒索。</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">06 · OUR PACT</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<!-- ============================================
+     PAGE 8 · 學苑不做什麼
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 07</div>
+    <h1 class="page-title">學苑「不」做什麼</h1>
+    <div class="page-title-en">WHAT WE ARE NOT</div>
+    <div class="gold-divider"></div>
+
+    <p class="boundaries-intro">
+      把界線講清楚 · 不是因為冷漠 · 而是<strong>對你負責</strong><br>
+      讓你知道我們提供什麼 · 也讓你不會在錯的地方期待錯的東西
+    </p>
+
+    <div class="boundaries-grid">
+      <div class="boundary-card">
+        <div class="boundary-x">×</div>
+        <div class="boundary-title">我們不報明牌</div>
+        <div class="boundary-desc">我們教財商觀念、教景氣循環、教投資的判斷邏輯,但<strong>不會告訴你「現在買什麼會漲」</strong>。任何說「跟著老師買」的承諾,都不是 RICH 的方式。</div>
+      </div>
+
+      <div class="boundary-card">
+        <div class="boundary-x">×</div>
+        <div class="boundary-title">我們不保證收益</div>
+        <div class="boundary-desc">學員的成果是學員自己的努力,過往的數字不代表未來。我們提供的是觀念與系統,<strong>實際成果取決於你的執行與決策</strong>。</div>
+      </div>
+
+      <div class="boundary-card">
+        <div class="boundary-x">×</div>
+        <div class="boundary-title">不是傳直銷招代理</div>
+        <div class="boundary-desc">RICH 沒有層級制度、沒有招募獎金、沒有業績壓力。<strong>你不需要拉人就能享有所有會員權益</strong>。介紹朋友是自願的,沒有人會因此給你壓力。</div>
+      </div>
+
+      <div class="boundary-card">
+        <div class="boundary-x">×</div>
+        <div class="boundary-title">不是命理諮詢</div>
+        <div class="boundary-desc">天賦原動力(Wealth Dynamics)是行為偏好分析,不是命盤、不是星座、不是占卜。<strong>它幫你看清自己的順流方向 · 不預測你的未來</strong>。</div>
+      </div>
+    </div>
+
+    <div class="boundaries-promise">
+      <div class="boundaries-promise-eyebrow">— OUR PROMISE —</div>
+      <div class="boundaries-promise-text">
+        我們不販賣神話 · 只<strong>陪你走真實的兩年</strong><br>
+        如果有一天你發現我們做了上面任何一件事 · 請直接告訴我們
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">07 · BOUNDARIES</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<!-- ============================================
+     PAGE 9 · QR 碼區
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">CHAPTER 08</div>
+    <h1 class="page-title">常用資源 · QR 快速通</h1>
+    <div class="page-title-en">QUICK ACCESS</div>
+    <div class="gold-divider"></div>
+
+    <div class="qr-grid">
+      <div class="qr-card">
+        <div class="qr-placeholder">QR 待補</div>
+        <div class="qr-label">線上平台教學</div>
+        <div class="qr-desc">圖文版操作教學 · 第一次登入請先看</div>
+      </div>
+
+      <div class="qr-card">
+        <div class="qr-placeholder">QR 待補</div>
+        <div class="qr-label">最新課表</div>
+        <div class="qr-desc">當年度所有課程的開課時間 · 報名連結</div>
+      </div>
+
+      <div class="qr-card">
+        <div class="qr-placeholder">QR 待補</div>
+        <div class="qr-label">查我的報名資料</div>
+        <div class="qr-desc">隨時查詢自己已報名的課程 · 上課地點</div>
+      </div>
+
+      <div class="qr-card">
+        <div class="qr-placeholder">QR 待補</div>
+        <div class="qr-label">RICH 介紹影片</div>
+        <div class="qr-desc">完整版的學苑介紹 · 給新人也給家人看</div>
+      </div>
+    </div>
+
+    <div class="qr-help-box">
+      <div class="qr-help-eyebrow">— FIRST · ASK —</div>
+      <div class="qr-help-text">
+        有任何問題 · 請<strong>先找助理</strong><br>
+        助理會幫你判斷 · 並引導到對的人或資源
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">08 · RESOURCES</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<!-- ============================================
+     PAGES 10-12 · 結構化筆記頁(三頁)
+     ============================================ -->
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">NOTES</div>
+    <h1 class="page-title">課程筆記 · 第 _____ 堂</h1>
+    <div class="gold-divider"></div>
+
+    <div class="note-header">
+      <div class="note-title">　</div>
+      <div class="note-meta">
+        <div class="note-meta-item">
+          <div class="note-meta-label">DATE</div>
+          <div class="note-meta-line"></div>
+        </div>
+        <div class="note-meta-item">
+          <div class="note-meta-label">COURSE</div>
+          <div class="note-meta-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-section">
+      <div class="note-section-eyebrow">— I —</div>
+      <div class="note-section-title">這堂課我的關鍵收穫</div>
+      <div class="note-lines"></div>
+    </div>
+
+    <div class="note-section">
+      <div class="note-section-eyebrow">— II —</div>
+      <div class="note-section-title">我要採取的具體行動</div>
+      <div class="note-lines tall"></div>
+    </div>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">09 · NOTES</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">NOTES</div>
+    <h1 class="page-title">課程筆記 · 第 _____ 堂</h1>
+    <div class="gold-divider"></div>
+
+    <div class="note-header">
+      <div class="note-title">　</div>
+      <div class="note-meta">
+        <div class="note-meta-item">
+          <div class="note-meta-label">DATE</div>
+          <div class="note-meta-line"></div>
+        </div>
+        <div class="note-meta-item">
+          <div class="note-meta-label">COURSE</div>
+          <div class="note-meta-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-section">
+      <div class="note-section-eyebrow">— I —</div>
+      <div class="note-section-title">這堂課我的關鍵收穫</div>
+      <div class="note-lines"></div>
+    </div>
+
+    <div class="note-section">
+      <div class="note-section-eyebrow">— II —</div>
+      <div class="note-section-title">我要採取的具體行動</div>
+      <div class="note-lines tall"></div>
+    </div>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">10 · NOTES</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+<section class="page">
+  <div class="gold-bar-top"></div>
+  <div class="page-inner">
+    <div class="page-eyebrow">NOTES</div>
+    <h1 class="page-title">課程筆記 · 第 _____ 堂</h1>
+    <div class="gold-divider"></div>
+
+    <div class="note-header">
+      <div class="note-title">　</div>
+      <div class="note-meta">
+        <div class="note-meta-item">
+          <div class="note-meta-label">DATE</div>
+          <div class="note-meta-line"></div>
+        </div>
+        <div class="note-meta-item">
+          <div class="note-meta-label">COURSE</div>
+          <div class="note-meta-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-section">
+      <div class="note-section-eyebrow">— I —</div>
+      <div class="note-section-title">這堂課我的關鍵收穫</div>
+      <div class="note-lines"></div>
+    </div>
+
+    <div class="note-section">
+      <div class="note-section-eyebrow">— II —</div>
+      <div class="note-section-title">我要採取的具體行動</div>
+      <div class="note-lines tall"></div>
+    </div>
+  </div>
+  <div class="page-footer">RICH MEMBER HANDBOOK · 輕易豐盛學苑</div>
+  <div class="page-num">11 · NOTES</div>
+  <div class="gold-bar-bottom"></div>
+</section>
+
+</body>
+</html>
